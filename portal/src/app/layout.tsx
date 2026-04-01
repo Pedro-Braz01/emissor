@@ -1,32 +1,16 @@
 import type { Metadata } from 'next';
-import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'NFSe Emissor - Ribeirão Preto',
-  description: 'Sistema de emissão de Notas Fiscais de Serviço Eletrônicas',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  title: 'Emissor NFSe — Ribeirão Preto',
+  description: 'Sistema de emissão de NFS-e para Ribeirão Preto (ABRASF 2.04)',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>
+      <body className="bg-gray-900 text-white antialiased">
         {children}
-        <Toaster 
-          position="top-right" 
-          richColors 
-          closeButton
-          toastOptions={{
-            duration: 4000,
-          }}
-        />
       </body>
     </html>
   );
