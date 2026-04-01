@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase';
+import { createClientSupabaseClient as createClient } from '@/lib/supabase-client';
 import { useAppStore, useUser, useEmpresa } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import {
