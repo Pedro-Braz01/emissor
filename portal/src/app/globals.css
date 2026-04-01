@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================
+   FONTES
+=================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ===================
+   BASE
+=================== */
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ===================
+   COMPONENTES
+=================== */
+@layer components {
+  /* Inputs */
+  .input {
+    @apply w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
+           transition-colors placeholder:text-gray-400
+           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20
+           disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500;
+  }
+
+  .input-error {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500/20;
+  }
+
+  /* Botões */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5
+           text-sm font-medium transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700
+           focus:ring-primary-500 active:bg-primary-800;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200
+           focus:ring-gray-500 active:bg-gray-300;
+  }
+
+  .btn-outline {
+    @apply border border-gray-300 bg-white text-gray-700
+           hover:bg-gray-50 focus:ring-gray-500 active:bg-gray-100;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700
+           focus:ring-red-500 active:bg-red-800;
+  }
+
+  .btn-ghost {
+    @apply text-gray-600 hover:bg-gray-100 hover:text-gray-900
+           focus:ring-gray-500;
+  }
+
+  /* Cards */
+  .card {
+    @apply rounded-xl border border-gray-200 bg-white shadow-sm;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* Links */
+  .link {
+    @apply text-primary-600 hover:text-primary-700 hover:underline;
+  }
+
+  /* Labels */
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-gray-700;
+  }
+
+  /* Error text */
+  .error-text {
+    @apply mt-1 text-sm text-red-600;
+  }
+}
+
+/* ===================
+   ANIMAÇÕES
+=================== */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ===================
+   SCROLLBAR
+=================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded bg-gray-300 hover:bg-gray-400;
+}
+
+/* ===================
+   FOCUS VISIBLE
+=================== */
+:focus-visible {
+  @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+}
+
+/* ===================
+   PRINT
+=================== */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
