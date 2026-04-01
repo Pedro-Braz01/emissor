@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClientSupabaseClient as createClient } from '@/lib/supabase-client';
 import { useEmpresa } from '@/lib/store';
 import { formatCurrency, formatDate, formatCpfCnpj, statusColors, statusLabels, cn } from '@/lib/utils';
 import DashboardLayout from '@/components/layout/dashboard-layout';
