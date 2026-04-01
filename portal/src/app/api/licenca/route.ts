@@ -1,19 +1,27 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient, getServerSession } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 export async function GET() {
-  const session = await getServerSession();
-  if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-
   const supabase = createServerSupabaseClient();
 
+  // ✅ CORREÇÃO: usar getUser() em vez de getSession()
+  // getUser() retorna tipo User com id tipado corretamente
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+
+  // Agora user.id é string — TypeScript fica feliz
   const { data: empresa } = await supabase
     .from('empresas')
     .select('id, razao_social, cnpj')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single();
 
-  if (!empresa) return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 });
+  if (!empresa) {
+    return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 });
+  }
 
   const { data: licenca } = await supabase
     .from('licencas')
@@ -34,11 +42,13 @@ export async function GET() {
 
 // PATCH — atualiza licença (uso interno / admin)
 export async function PATCH(request: Request) {
-  const session = await getServerSession();
-  if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  const supabase = createServerSupabaseClient();
 
-  // Só permite se for service_role (chamada interna)
-  // Na prática, proteja esta rota com SUPABASE_SERVICE_ROLE_KEY no header
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+
   const body = await request.json();
   const { empresa_id, license_active } = body;
 
@@ -46,7 +56,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Parâmetros inválidos' }, { status: 400 });
   }
 
-  const supabase = createServerSupabaseClient();
   const { error } = await supabase
     .from('licencas')
     .update({ license_active, updated_at: new Date().toISOString() })
