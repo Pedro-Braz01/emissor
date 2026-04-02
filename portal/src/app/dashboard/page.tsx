@@ -5,44 +5,56 @@ import DashboardClient from './DashboardClient';
 
 export default async function DashboardPage() {
   const supabase = createServerSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) redirect('/login');
+  if (!user) redirect('/login');
 
   const { data: empresa } = await supabase
     .from('empresas')
-    .select('*, licencas(*)')
-    .eq('user_id', session.user.id)
+    .select('*')
+    .eq('user_id', user.id)
     .single();
+
+  // Busca licenças separadamente
+  const { data: licencas } = empresa
+    ? await supabase.from('licencas').select('*').eq('empresa_id', empresa.id)
+    : { data: null };
+
+  const empresaComLicenca = empresa
+    ? { ...empresa, licencas: licencas ?? [] }
+    : null;
+
+  const empresaId = empresa?.id ?? '';
 
   const { data: notas } = await supabase
     .from('notas_fiscais')
-    .select('id, numero_rps, numero_nfse, tomador_razao_social, valor_servicos, valor_iss, status, created_at')
-    .eq('empresa_id', empresa?.id ?? '')
+    .select('*')
+    .eq('empresa_id', empresaId)
     .order('created_at', { ascending: false })
     .limit(20);
 
   const { data: stats } = await supabase
     .from('notas_fiscais')
-    .select('status, valor_servicos, valor_iss')
-    .eq('empresa_id', empresa?.id ?? '');
+    .select('*')
+    .eq('empresa_id', empresaId);
 
-  const emitidas = stats?.filter(n => n.status === 'emitida') ?? [];
+  const allStats = stats ?? [];
+  const emitidas = allStats.filter((n: any) => n.status === 'emitida');
 
   const totais = {
     emitidas: emitidas.length,
-    canceladas: stats?.filter(n => n.status === 'cancelada').length ?? 0,
-    pendentes: stats?.filter(n => n.status === 'pendente').length ?? 0,
-    valor_total: emitidas.reduce((acc, n) => acc + (n.valor_servicos ?? 0), 0),
-    iss_total: emitidas.reduce((acc, n) => acc + (n.valor_iss ?? 0), 0),
+    canceladas: allStats.filter((n: any) => n.status === 'cancelada').length,
+    pendentes: allStats.filter((n: any) => n.status === 'pendente').length,
+    valor_total: emitidas.reduce((acc: number, n: any) => acc + (n.valor_servicos ?? 0), 0),
+    iss_total: emitidas.reduce((acc: number, n: any) => acc + (n.valor_iss ?? 0), 0),
   };
 
   return (
     <DashboardClient
-      empresa={empresa}
+      empresa={empresaComLicenca}
       notas={notas ?? []}
       totais={totais}
-      userEmail={session.user.email ?? ''}
+      userEmail={user.email ?? ''}
     />
   );
 }

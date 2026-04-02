@@ -28,14 +28,20 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_ROUTES.some(r => pathname.startsWith(r));
+  const isApiRoute = pathname.startsWith('/api/');
 
-  if (!session && !isPublic && pathname !== '/') {
+  // Não redirecionar rotas de API — elas retornam JSON 401
+  if (isApiRoute) {
+    return response;
+  }
+
+  if (!user && !isPublic && pathname !== '/') {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  if (session && isPublic) {
+  if (user && isPublic) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

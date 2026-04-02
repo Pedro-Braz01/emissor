@@ -1,0 +1,20 @@
+# dependencies
+portal/node_modules/
+node_modules/
+
+# next.js
+portal/.next/
+portal/out/
+
+# env files (NUNCA commitar credenciais)
+.env
+.env.local
+.env*.local
+portal/.env
+portal/.env.local
+portal/.env*.local
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db

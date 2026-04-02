@@ -5,13 +5,13 @@ import ConfiguracoesTributariasClient from './ConfiguracoesTributariasClient';
 
 export default async function ConfiguracoesTributariasPage() {
   const supabase = createServerSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
   const { data: empresa } = await supabase
     .from('empresas')
-    .select('id, razao_social, regime_tributario')
-    .eq('user_id', session.user.id)
+    .select('*')
+    .eq('user_id', user.id)
     .single();
 
   if (!empresa) redirect('/dashboard');

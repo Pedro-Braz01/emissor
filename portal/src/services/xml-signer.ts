@@ -41,7 +41,7 @@ const TRANSFORM_ENVELOPED = 'http://www.w3.org/2000/09/xmldsig#enveloped-signatu
 // ===================
 
 export class XmlSigner {
-  private privateKey: forge.pki.PrivateKey;
+  private privateKey: any;
   private certificate: forge.pki.Certificate;
   private certificateBase64: string;
 

@@ -5,7 +5,7 @@
  * Orquestra todo o fluxo de emissão de NFSe
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { SoapClient, type SoapResponse, type Ambiente } from './soap-client';
 import { XmlBuilder, type DadosNfse, type Prestador, type Tomador, type Servico } from './xml-builder';
 import { XmlSigner, decryptPassword } from './xml-signer';
@@ -68,7 +68,7 @@ export interface CancelamentoInput {
 // ===================
 
 export class NfseService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: SupabaseClient;
   private soapClient: SoapClient;
   private encryptionKey: string;
 
@@ -87,7 +87,7 @@ export class NfseService {
    * Emite uma NFSe
    */
   async emitir(input: EmissaoInput, userId: string, userNome: string, userIp?: string): Promise<EmissaoResult> {
-    let notaId: string | undefined;
+    let notaId = '';
 
     try {
       // 1. Busca dados da empresa
@@ -251,7 +251,7 @@ export class NfseService {
       const signer = new XmlSigner(pfxBuffer, pfxPassword);
       
       if (!signer.isValid()) {
-        await this.updateNotaStatus(notaId, 'REJEITADA', 'Certificado digital expirado');
+        await this.updateNotaStatus(notaId!, 'REJEITADA', 'Certificado digital expirado');
         return { success: false, error: 'Certificado digital expirado' };
       }
 

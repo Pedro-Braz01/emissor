@@ -4,18 +4,15 @@ import { createServerSupabaseClient } from '@/lib/supabase-server';
 export async function GET() {
   const supabase = createServerSupabaseClient();
 
-  // ✅ CORREÇÃO: usar getUser() em vez de getSession()
-  // getUser() retorna tipo User com id tipado corretamente
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
+
   if (authError || !user) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
-  // Agora user.id é string — TypeScript fica feliz
   const { data: empresa } = await supabase
     .from('empresas')
-    .select('id, razao_social, cnpj')
+    .select('*')
     .eq('user_id', user.id)
     .single();
 
@@ -25,7 +22,7 @@ export async function GET() {
 
   const { data: licenca } = await supabase
     .from('licencas')
-    .select('license_active, plano, data_expiracao, notas_mes_limite')
+    .select('*')
     .eq('empresa_id', empresa.id)
     .single();
 
@@ -58,7 +55,7 @@ export async function PATCH(request: Request) {
 
   const { error } = await supabase
     .from('licencas')
-    .update({ license_active, updated_at: new Date().toISOString() })
+    .update({ license_active })
     .eq('empresa_id', empresa_id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
