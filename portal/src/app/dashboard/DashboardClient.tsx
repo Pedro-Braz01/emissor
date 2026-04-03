@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { createClientSupabaseClient } from '@/lib/supabase-client';
+import DashboardLayout from '@/components/layout/dashboard-layout';
 
 // ---- Tipos ----
 type Nota = {
@@ -35,11 +35,11 @@ type Props = { empresa: Empresa; notas: Nota[]; totais: Totais; userEmail: strin
 
 // ---- Helpers ----
 const STATUS_STYLE: Record<string, string> = {
-  emitida:    'bg-green-500/10 text-green-400 border-green-500/20',
-  cancelada:  'bg-red-500/10 text-red-400 border-red-500/20',
-  substituida:'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  pendente:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  erro:       'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  emitida:    'bg-green-100 text-green-700',
+  cancelada:  'bg-red-100 text-red-700',
+  substituida:'bg-yellow-100 text-yellow-700',
+  pendente:   'bg-blue-100 text-blue-700',
+  erro:       'bg-orange-100 text-orange-700',
 };
 
 const fmt = (v: number) =>
@@ -56,96 +56,60 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
   const licenca = empresa?.licencas?.[0];
   const ativa = licenca?.license_active ?? false;
 
-  async function handleLogout() {
-    await createClientSupabaseClient().auth.signOut();
-    router.push('/login');
-  }
-
   return (
-    <div className="min-h-screen bg-gray-900">
+    <DashboardLayout>
+      <div className="space-y-6">
 
-      {/* ── Header ── */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm leading-tight">Emissor NFSe</p>
-              <p className="text-gray-500 text-xs">Ribeirão Preto</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <span className={`hidden sm:inline-flex px-2.5 py-1 rounded-full text-xs font-medium border
-              ${ativa ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-              {ativa ? '● Licença Ativa' : '● Licença Bloqueada'}
-            </span>
-            <span className="text-gray-400 text-sm hidden md:block">{userEmail}</span>
-            <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition-colors">
-              Sair
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-
-        {/* ── Alerta licença bloqueada ── */}
+        {/* Alerta licença bloqueada */}
         {!ativa && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
-            <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+            <svg className="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div>
-              <p className="text-red-400 font-medium text-sm">Licença bloqueada</p>
-              <p className="text-red-400/70 text-xs mt-0.5">A emissão está suspensa. Entre em contato com o suporte.</p>
+              <p className="text-red-800 font-medium text-sm">{'Licença bloqueada'}</p>
+              <p className="text-red-600 text-xs mt-0.5">{'A emissão está suspensa. Entre em contato com o suporte.'}</p>
             </div>
           </div>
         )}
 
-        {/* ── Empresa ── */}
+        {/* Empresa info */}
         {empresa && (
           <div>
-            <h2 className="text-white font-semibold text-xl">{empresa.razao_social}</h2>
-            <p className="text-gray-400 text-sm mt-0.5">
+            <h2 className="text-xl font-bold text-gray-900">{empresa.razao_social}</h2>
+            <p className="text-gray-500 text-sm mt-0.5">
               CNPJ: {empresa.cnpj} &middot; IM: {empresa.inscricao_municipal} &middot;&nbsp;
               {empresa.regime_tributario.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
             </p>
           </div>
         )}
 
-        {/* ── Stats cards ── */}
+        {/* Stats cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <StatCard label="Emitidas"    value={String(totais.emitidas)}        color="green"  emoji="📄" />
-          <StatCard label="Pendentes"   value={String(totais.pendentes)}       color="blue"   emoji="⏳" />
-          <StatCard label="Canceladas"  value={String(totais.canceladas)}      color="red"    emoji="❌" />
-          <StatCard label="Faturado"    value={fmt(totais.valor_total)}        color="purple" emoji="💰" />
-          <StatCard label="ISS Retido"  value={fmt(totais.iss_total)}          color="yellow" emoji="🏛️" />
+          <StatCard label="Emitidas"    value={String(totais.emitidas)}   color="green" />
+          <StatCard label="Pendentes"   value={String(totais.pendentes)}  color="blue" />
+          <StatCard label="Canceladas"  value={String(totais.canceladas)} color="red" />
+          <StatCard label="Faturado"    value={fmt(totais.valor_total)}   color="purple" />
+          <StatCard label="ISS Retido"  value={fmt(totais.iss_total)}     color="yellow" />
         </div>
 
-        {/* ── Tabela de notas ── */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-            <h3 className="text-white font-medium">Notas Fiscais</h3>
+        {/* Tabela de notas */}
+        <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">Notas Fiscais Recentes</h3>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => router.push('/notas/lote')}
-                disabled={!ativa}
-                className="text-gray-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed text-sm px-3 py-1.5 rounded-lg
-                           border border-gray-600 hover:border-gray-500 transition-colors"
+                onClick={() => router.push('/notas')}
+                className="text-gray-500 hover:text-gray-700 text-sm px-3 py-1.5 rounded-lg
+                           border border-gray-300 hover:border-gray-400 transition-colors"
               >
-                Importar Lote
+                Ver Todas
               </button>
               <button
-                onClick={() => router.push('/notas/emitir')}
+                onClick={() => router.push('/emitir')}
                 disabled={!ativa}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed
+                className="bg-primary-600 hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed
                            text-white text-sm px-4 py-1.5 rounded-lg transition-colors"
               >
                 + Nova Nota
@@ -155,14 +119,14 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
 
           {notas.length === 0 ? (
             <div className="px-6 py-16 text-center">
-              <p className="text-gray-500 text-sm">Nenhuma nota emitida ainda.</p>
-              <p className="text-gray-600 text-xs mt-1">Clique em &ldquo;+ Nova Nota&rdquo; para começar.</p>
+              <p className="text-gray-400 text-sm">Nenhuma nota emitida ainda.</p>
+              <p className="text-gray-300 text-xs mt-1">{'Clique em "+ Nova Nota" para começar.'}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-700 text-xs text-gray-400 uppercase">
+                  <tr className="border-b bg-gray-50 text-xs text-gray-500 uppercase">
                     <th className="text-left px-6 py-3 font-medium">RPS</th>
                     <th className="text-left px-6 py-3 font-medium">NFSe</th>
                     <th className="text-left px-6 py-3 font-medium">Tomador</th>
@@ -172,21 +136,21 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
                     <th className="text-right px-6 py-3 font-medium">Data</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-700/50">
+                <tbody className="divide-y">
                   {notas.map(nota => (
-                    <tr key={nota.id} className="hover:bg-gray-700/30 transition-colors cursor-pointer"
-                        onClick={() => router.push(`/notas/${nota.id}`)}>
-                      <td className="px-6 py-3 text-gray-300 font-mono">#{nota.numero_rps}</td>
-                      <td className="px-6 py-3 text-gray-300">{nota.numero_nfse ?? '—'}</td>
-                      <td className="px-6 py-3 text-gray-300 max-w-[180px] truncate">{nota.tomador_razao_social}</td>
-                      <td className="px-6 py-3 text-gray-300 text-right font-mono">{fmt(nota.valor_servicos)}</td>
-                      <td className="px-6 py-3 text-gray-300 text-right font-mono">{fmt(nota.valor_iss)}</td>
+                    <tr key={nota.id} className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/notas`)}>
+                      <td className="px-6 py-3 text-gray-900 font-mono">#{nota.numero_rps}</td>
+                      <td className="px-6 py-3 text-gray-600">{nota.numero_nfse ?? '—'}</td>
+                      <td className="px-6 py-3 text-gray-600 max-w-[180px] truncate">{nota.tomador_razao_social}</td>
+                      <td className="px-6 py-3 text-gray-900 text-right font-mono">{fmt(nota.valor_servicos)}</td>
+                      <td className="px-6 py-3 text-gray-600 text-right font-mono">{fmt(nota.valor_iss)}</td>
                       <td className="px-6 py-3 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${STATUS_STYLE[nota.status] ?? 'bg-gray-700 text-gray-400'}`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[nota.status] ?? 'bg-gray-100 text-gray-600'}`}>
                           {capitalize(nota.status)}
                         </span>
                       </td>
-                      <td className="px-6 py-3 text-gray-400 text-right">{fmtDate(nota.created_at)}</td>
+                      <td className="px-6 py-3 text-gray-500 text-right">{fmtDate(nota.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -194,30 +158,26 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
             </div>
           )}
         </div>
-
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
 // ── StatCard ──
-function StatCard({ label, value, color, emoji }: {
-  label: string; value: string; color: string; emoji: string;
+function StatCard({ label, value, color }: {
+  label: string; value: string; color: string;
 }) {
   const palette: Record<string, string> = {
-    green:  'border-green-500/20  bg-green-500/5',
-    blue:   'border-blue-500/20   bg-blue-500/5',
-    red:    'border-red-500/20    bg-red-500/5',
-    purple: 'border-purple-500/20 bg-purple-500/5',
-    yellow: 'border-yellow-500/20 bg-yellow-500/5',
+    green:  'border-green-200 bg-green-50 text-green-700',
+    blue:   'border-blue-200 bg-blue-50 text-blue-700',
+    red:    'border-red-200 bg-red-50 text-red-700',
+    purple: 'border-purple-200 bg-purple-50 text-purple-700',
+    yellow: 'border-yellow-200 bg-yellow-50 text-yellow-700',
   };
   return (
-    <div className={`rounded-xl border p-4 ${palette[color] ?? 'border-gray-700 bg-gray-800'}`}>
-      <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-base">{emoji}</span>
-        <span className="text-gray-400 text-xs">{label}</span>
-      </div>
-      <p className="text-white font-semibold text-base truncate">{value}</p>
+    <div className={`rounded-xl border p-4 ${palette[color] ?? 'border-gray-200 bg-white'}`}>
+      <p className="text-xs opacity-70 mb-1">{label}</p>
+      <p className="font-bold text-lg truncate">{value}</p>
     </div>
   );
 }

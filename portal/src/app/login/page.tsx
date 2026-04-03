@@ -99,9 +99,17 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-6">
-          Acesso exclusivo para clientes licenciados
-        </p>
+        <div className="text-center mt-6 space-y-2">
+          <a href="/forgot-password" className="block text-gray-400 hover:text-white text-sm transition-colors">
+            Esqueceu sua senha?
+          </a>
+          <p className="text-gray-600 text-xs">
+            Ainda n\u00e3o tem conta?{' '}
+            <a href="/cadastro" className="text-blue-400 hover:text-blue-300 transition-colors">
+              Cadastre sua empresa
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

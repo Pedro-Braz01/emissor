@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useEmpresa } from '@/lib/store';
 import { formatCurrency, formatCpfCnpj, calcularImpostos, validateCpfCnpj } from '@/lib/utils';
+import { fetchCnpj, fetchCep } from '@/lib/brasil-api';
 import DashboardLayout from '@/components/layout/dashboard-layout';
 import {
   FileText,
@@ -63,6 +64,9 @@ type EmissaoForm = z.infer<typeof emissaoSchema>;
 export default function EmitirPage() {
   const empresa = useEmpresa();
   const [loading, setLoading] = useState(false);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [enviarParaTomador, setEnviarParaTomador] = useState(false);
   const [resultado, setResultado] = useState<{
     success: boolean;
     numeroNfse?: number;
@@ -108,6 +112,42 @@ export default function EmitirPage() {
     setValue('tomador.cpfCnpj', value);
   };
 
+  // Auto-fill CNPJ via BrasilAPI
+  const handleCnpjBlur = async () => {
+    const digits = watch('tomador.cpfCnpj')?.replace(/\D/g, '') || '';
+    if (digits.length !== 14) return;
+    setCnpjLoading(true);
+    const data = await fetchCnpj(digits);
+    setCnpjLoading(false);
+    if (data) {
+      setValue('tomador.razaoSocial', data.razao_social);
+      if (data.email) setValue('tomador.email', data.email);
+      if (data.telefone) setValue('tomador.telefone', data.telefone);
+      if (data.cep) {
+        setValue('tomador.endereco.cep', data.cep);
+        setValue('tomador.endereco.logradouro', data.logradouro);
+        setValue('tomador.endereco.numero', data.numero);
+        setValue('tomador.endereco.complemento', data.complemento);
+        setValue('tomador.endereco.bairro', data.bairro);
+        setValue('tomador.endereco.uf', data.uf);
+      }
+    }
+  };
+
+  // Auto-fill CEP via BrasilAPI
+  const handleCepBlur = async () => {
+    const digits = watch('tomador.endereco.cep')?.replace(/\D/g, '') || '';
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    const data = await fetchCep(digits);
+    setCepLoading(false);
+    if (data) {
+      setValue('tomador.endereco.logradouro', data.street);
+      setValue('tomador.endereco.bairro', data.neighborhood);
+      setValue('tomador.endereco.uf', data.state);
+    }
+  };
+
   const onSubmit = async (data: EmissaoForm) => {
     if (!empresa?.id) {
       toast.error('Selecione uma empresa');
@@ -136,6 +176,7 @@ export default function EmitirPage() {
             itemListaServico: data.servico.itemListaServico,
             issRetido: data.servico.issRetido,
           },
+          enviarParaTomador,
         }),
       });
 
@@ -225,14 +266,23 @@ export default function EmitirPage() {
               {/* CPF/CNPJ */}
               <div>
                 <label className="label">CPF/CNPJ *</label>
-                <input
-                  type="text"
-                  placeholder="000.000.000-00"
-                  className={`input ${errors.tomador?.cpfCnpj ? 'input-error' : ''}`}
-                  {...register('tomador.cpfCnpj')}
-                  onChange={handleCpfCnpjChange}
-                  maxLength={18}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="000.000.000-00"
+                    className={`input ${errors.tomador?.cpfCnpj ? 'input-error' : ''}`}
+                    {...register('tomador.cpfCnpj')}
+                    onChange={handleCpfCnpjChange}
+                    onBlur={handleCnpjBlur}
+                    maxLength={18}
+                  />
+                  {cnpjLoading && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
+                    </div>
+                  )}
+                </div>
+                <p className="mt-0.5 text-xs text-gray-400">CNPJ preenche automaticamente via BrasilAPI</p>
                 {errors.tomador?.cpfCnpj && (
                   <p className="error-text">{errors.tomador.cpfCnpj.message}</p>
                 )}
@@ -275,6 +325,62 @@ export default function EmitirPage() {
                   className="input"
                   {...register('tomador.telefone')}
                 />
+              </div>
+
+              {/* CEP */}
+              <div>
+                <label className="label">CEP</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="00000-000"
+                    className="input"
+                    {...register('tomador.endereco.cep')}
+                    onBlur={handleCepBlur}
+                    maxLength={9}
+                  />
+                  {cepLoading && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Logradouro */}
+              <div>
+                <label className="label">Logradouro</label>
+                <input type="text" placeholder="Rua, Avenida..." className="input"
+                  {...register('tomador.endereco.logradouro')} />
+              </div>
+
+              {/* Número */}
+              <div>
+                <label className="label">Número</label>
+                <input type="text" placeholder="Nº" className="input"
+                  {...register('tomador.endereco.numero')} />
+              </div>
+
+              {/* Bairro */}
+              <div>
+                <label className="label">Bairro</label>
+                <input type="text" placeholder="Bairro" className="input"
+                  {...register('tomador.endereco.bairro')} />
+              </div>
+
+              {/* Enviar para tomador */}
+              <div className="md:col-span-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={enviarParaTomador}
+                    onChange={e => setEnviarParaTomador(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary-600"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Enviar nota automaticamente para o email do tomador
+                  </span>
+                </label>
               </div>
             </div>
           </div>
