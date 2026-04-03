@@ -7,7 +7,6 @@ portal/.next/
 portal/out/
 
 # env files (NUNCA commitar credenciais)
-.env
 .env.local
 .env*.local
 portal/.env
