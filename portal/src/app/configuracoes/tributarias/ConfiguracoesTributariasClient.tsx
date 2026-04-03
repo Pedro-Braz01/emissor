@@ -13,6 +13,7 @@ type Config = {
   aliquota_cofins: number;
   aliquota_csll: number;
   aliquota_irrf: number;
+  aliquota_inss: number;
   iss_retido_fonte: boolean;
   codigo_servico: string;
   item_lista_servico: string;
@@ -24,6 +25,7 @@ const DEFAULTS: Omit<NonNullable<Config>, 'id' | 'empresa_id'> = {
   aliquota_cofins: 3.0,
   aliquota_csll: 1.0,
   aliquota_irrf: 1.5,
+  aliquota_inss: 11.0,
   iss_retido_fonte: false,
   codigo_servico: '1.01',
   item_lista_servico: '1',
@@ -57,6 +59,7 @@ export default function ConfiguracoesTributariasClient({
       aliquota_cofins: isSimplesNacional ? 0 : form.aliquota_cofins,
       aliquota_csll: isSimplesNacional ? 0 : form.aliquota_csll,
       aliquota_irrf: isSimplesNacional ? 0 : form.aliquota_irrf,
+      aliquota_inss: isSimplesNacional ? 0 : form.aliquota_inss,
       iss_retido_fonte: form.iss_retido_fonte,
       codigo_servico: form.codigo_servico,
       item_lista_servico: form.item_lista_servico,
@@ -147,11 +150,11 @@ export default function ConfiguracoesTributariasClient({
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-4">
-              {(['pis', 'cofins', 'csll', 'irrf'] as const).map(imp => (
+              {(['pis', 'cofins', 'csll', 'irrf', 'inss'] as const).map(imp => (
                 <Field
                   key={imp}
                   label={`Alíquota ${imp.toUpperCase()} (%)`}
-                  hint={imp === 'irrf' ? 'Isento se base < R$ 215,05' : undefined}
+                  hint={imp === 'irrf' ? 'Isento se base < R$ 215,05' : imp === 'inss' ? 'Retenção previdenciária' : undefined}
                 >
                   <input
                     type="number" step="0.01" min="0" max="10"
@@ -233,7 +236,8 @@ function PreviewCalculo({ form, regime }: { form: typeof DEFAULTS; regime: strin
   const cofins = isSN ? 0 : pct(form.aliquota_cofins);
   const csll   = isSN ? 0 : pct(form.aliquota_csll);
   const irrf   = isSN ? 0 : (base >= 215.05 ? pct(form.aliquota_irrf) : 0);
-  const total  = iss + pis + cofins + csll + irrf;
+  const inss   = isSN ? 0 : pct(form.aliquota_inss);
+  const total  = iss + pis + cofins + csll + irrf + inss;
   const liquido = base - total;
 
   const fmt = (v: number) =>
@@ -247,6 +251,7 @@ function PreviewCalculo({ form, regime }: { form: typeof DEFAULTS; regime: strin
       { label: `COFINS (${form.aliquota_cofins}%)`, value: fmt(cofins), bold: false },
       { label: `CSLL (${form.aliquota_csll}%)`,  value: fmt(csll),   bold: false },
       { label: `IRRF (${form.aliquota_irrf}%)`,  value: irrf > 0 ? fmt(irrf) : 'Isento', bold: false },
+      { label: `INSS (${form.aliquota_inss}%)`,  value: fmt(inss), bold: false },
     ] : []),
     { label: 'Total de Impostos', value: fmt(total), bold: false },
     { label: 'Valor Líquido', value: fmt(liquido), bold: true },

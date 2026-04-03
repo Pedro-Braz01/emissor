@@ -144,86 +144,43 @@ export default function CadastroPage() {
     setLoading(true);
     setError('');
 
-    const supabase = createClientSupabaseClient();
-
-    // 1. Create user account
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password: senha,
-      options: {
-        data: { razao_social: razaoSocial, cnpj: cnpj.replace(/\D/g, '') },
-      },
-    });
-
-    if (signUpError) {
-      if (signUpError.message.includes('already registered')) {
-        setError('Este e-mail já está cadastrado. Faça login ou recupere sua senha.');
-      } else {
-        setError(signUpError.message);
-      }
-      setLoading(false);
-      return;
-    }
-
-    if (!authData.user) {
-      setError('Erro ao criar conta. Tente novamente.');
-      setLoading(false);
-      return;
-    }
-
     const endereco = [logradouro, numero, complemento, bairro, cidade, uf]
       .filter(Boolean)
       .join(', ');
 
-    // 2. Create empresa
-    const { data: empresa, error: empresaError } = await supabase
-      .from('empresas')
-      .insert({
-        user_id: authData.user.id,
-        cnpj: cnpj.replace(/\D/g, ''),
-        razao_social: razaoSocial,
-        nome_fantasia: nomeFantasia || null,
-        inscricao_municipal: inscricaoMunicipal,
-        regime_tributario: regimeTributario,
-        email_empresa: email,
-        telefone: telefone || null,
-        endereco: endereco || null,
-      })
-      .select()
-      .single();
+    // Tudo via API server-side com service_role — evita RLS bloqueando
+    // usuário sem sessão ativa (email confirmation pendente)
+    try {
+      const res = await fetch('/api/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          senha,
+          cnpj,
+          razao_social: razaoSocial,
+          nome_fantasia: nomeFantasia || null,
+          inscricao_municipal: inscricaoMunicipal,
+          regime_tributario: regimeTributario,
+          telefone: telefone || null,
+          endereco_completo: endereco || null,
+        }),
+      });
 
-    if (empresaError) {
-      if (empresaError.message.includes('duplicate') || empresaError.message.includes('unique')) {
-        setError('Este CNPJ já está cadastrado.');
-      } else {
-        setError('Erro ao cadastrar empresa: ' + empresaError.message);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Erro ao realizar cadastro.');
+        setLoading(false);
+        return;
       }
+
+      setSuccess(true);
+    } catch {
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // 3. Create license (INACTIVE until payment confirmation)
-    await supabase.from('licencas').insert({
-      empresa_id: empresa.id,
-      license_active: false,
-      plano: 'basico',
-      notas_mes_limite: 50,
-    });
-
-    // 4. Create default tax config
-    await supabase.from('configuracoes_tributarias').insert({
-      empresa_id: empresa.id,
-      aliquota_iss: 2.0,
-      aliquota_pis: regimeTributario === 'simples_nacional' ? 0 : 0.65,
-      aliquota_cofins: regimeTributario === 'simples_nacional' ? 0 : 3.0,
-      aliquota_csll: regimeTributario === 'simples_nacional' ? 0 : 1.0,
-      aliquota_irrf: regimeTributario === 'simples_nacional' ? 0 : 1.5,
-      codigo_servico: '1.01',
-      item_lista_servico: '1',
-    });
-
-    setSuccess(true);
-    setLoading(false);
   }
 
   if (success) {

@@ -69,7 +69,7 @@ export default function ConfiguracoesEmpresaPage() {
       setEmailEmpresa(data.email_empresa || '');
       setEmailContador(data.email_contador || '');
       setTelefone(data.telefone || '');
-      setEndereco(data.endereco || '');
+      setEndereco(data.endereco_completo || '');
       setEnvioAutoContador((data as any).envio_auto_contador ?? false);
       setEnvioAutoEmissor((data as any).envio_auto_emissor ?? false);
       setCertStatus((data as any).certificado_digital_encrypted ? 'uploaded' : 'none');
@@ -92,7 +92,7 @@ export default function ConfiguracoesEmpresaPage() {
       email_empresa: emailEmpresa || null,
       email_contador: emailContador || null,
       telefone: telefone || null,
-      endereco: endereco || null,
+      endereco_completo: endereco || null,
     };
 
     const { error: updateError } = await supabase

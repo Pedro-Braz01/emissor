@@ -151,10 +151,15 @@ export const useIsLoading = () => useAppStore((state) => state.isLoading);
 
 export const useIsAdmin = () => {
   const user = useUser();
-  return user?.role === 'MASTER' || user?.role === 'ADMIN';
+  return user?.role === 'super_admin' || user?.role === 'owner';
+};
+
+export const useIsSuperAdmin = () => {
+  const user = useUser();
+  return user?.role === 'super_admin';
 };
 
 export const useCanEmit = () => {
   const user = useUser();
-  return ['MASTER', 'ADMIN', 'GERENTE', 'OPERADOR'].includes(user?.role || '');
+  return ['super_admin', 'owner', 'emissor'].includes(user?.role || '');
 };

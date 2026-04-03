@@ -90,6 +90,7 @@ export async function POST(request: Request) {
     cofins: configTrib?.aliquota_cofins ?? 3.0,
     csll:   configTrib?.aliquota_csll   ?? 1.0,
     irrf:   configTrib?.aliquota_irrf   ?? 1.5,
+    inss:   configTrib?.aliquota_inss   ?? 11.0,
   };
 
   // ── Cálculo de impostos ──
@@ -125,9 +126,10 @@ export async function POST(request: Request) {
       valor_cofins: impostos.cofins,
       valor_csll: impostos.csll,
       valor_irrf: impostos.irrf,
-      valor_liquido: body.servico.valorServicos - impostos.iss - impostos.irrf - impostos.csll - impostos.pis - impostos.cofins,
+      valor_inss: impostos.inss,
+      valor_liquido: body.servico.valorServicos - impostos.iss - impostos.irrf - impostos.csll - impostos.pis - impostos.cofins - impostos.inss,
       discriminacao: body.servico.discriminacao,
-      codigo_municipio_prestacao: '3543402',
+      municipio_prestacao: '3543402',
       created_by: user.id,
       created_by_ip: ip,
     })
@@ -174,6 +176,7 @@ function calcularImpostos(
       cofins: 0,
       csll:   0,
       irrf:   0,
+      inss:   0,
     };
   }
 
@@ -183,5 +186,6 @@ function calcularImpostos(
     cofins: pct(base, aliquotas.cofins),
     csll:   pct(base, aliquotas.csll),
     irrf:   base >= 215.05 ? pct(base, aliquotas.irrf) : 0,
+    inss:   pct(base, aliquotas.inss),
   };
 }

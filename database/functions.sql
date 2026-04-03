@@ -1,183 +1,120 @@
 -- ============================================================================
 -- FUNÇÕES ADICIONAIS PARA O SUPABASE
--- Execute este arquivo DEPOIS do schema.sql principal
+-- Execute DEPOIS do schema.sql
 -- ============================================================================
 
--- Função para incrementar contador de notas do mês
-CREATE OR REPLACE FUNCTION incrementar_notas_mes(p_tenant_id UUID)
+-- ============================================================================
+-- Função: incrementar contador de notas do mês
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.incrementar_notas_mes(p_empresa_id UUID)
 RETURNS void AS $$
 BEGIN
-    UPDATE tenants
-    SET notas_mes_atual = notas_mes_atual + 1
-    WHERE id = p_tenant_id;
+  UPDATE public.licencas
+  SET notas_mes_atual = notas_mes_atual + 1
+  WHERE empresa_id = p_empresa_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Função para resetar contadores mensais (execute no início de cada mês)
-CREATE OR REPLACE FUNCTION reset_contadores_mensais()
+-- ============================================================================
+-- Função: resetar contadores mensais (agendar via pg_cron no 1º dia do mês)
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.reset_contadores_mensais()
 RETURNS void AS $$
 BEGIN
-    UPDATE tenants SET notas_mes_atual = 0;
+  UPDATE public.licencas SET notas_mes_atual = 0;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Agendamento do reset (requer pg_cron extension no Supabase)
--- Descomente se você habilitou pg_cron:
--- SELECT cron.schedule('reset-contadores', '0 0 1 * *', 'SELECT reset_contadores_mensais()');
+-- Agendamento (requer pg_cron habilitado no Supabase):
+-- SELECT cron.schedule('reset-contadores', '0 0 1 * *', 'SELECT public.reset_contadores_mensais()');
 
--- Função para verificar se pode emitir (útil para RLS)
-CREATE OR REPLACE FUNCTION pode_emitir(p_tenant_id UUID)
+-- ============================================================================
+-- Função: verificar se empresa pode emitir NFS-e
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.pode_emitir(p_empresa_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
-    v_tenant tenants%ROWTYPE;
-    v_licenca licencas%ROWTYPE;
+  v_empresa  public.empresas%ROWTYPE;
+  v_licenca  public.licencas%ROWTYPE;
 BEGIN
-    -- Busca tenant
-    SELECT * INTO v_tenant FROM tenants WHERE id = p_tenant_id;
-    IF NOT FOUND OR NOT v_tenant.ativo THEN
-        RETURN FALSE;
-    END IF;
-    
-    -- Busca licença
-    SELECT * INTO v_licenca FROM licencas WHERE tenant_id = p_tenant_id;
-    IF NOT FOUND THEN
-        RETURN FALSE;
-    END IF;
-    
-    -- Verifica status
-    IF v_licenca.status IN ('BLOQUEADO', 'CANCELADO', 'SUSPENSO') THEN
-        RETURN FALSE;
-    END IF;
-    
-    IF NOT v_licenca.license_active THEN
-        RETURN FALSE;
-    END IF;
-    
-    -- Verifica validade
-    IF v_licenca.status = 'TRIAL' AND v_licenca.trial_fim < CURRENT_DATE THEN
-        RETURN FALSE;
-    END IF;
-    
-    IF v_licenca.validade IS NOT NULL AND v_licenca.validade < CURRENT_DATE THEN
-        RETURN FALSE;
-    END IF;
-    
-    -- Verifica limite de notas
-    IF v_tenant.notas_mes_atual >= v_tenant.max_notas_mes THEN
-        RETURN FALSE;
-    END IF;
-    
-    RETURN TRUE;
+  -- Busca empresa
+  SELECT * INTO v_empresa FROM public.empresas WHERE id = p_empresa_id;
+  IF NOT FOUND THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Verifica status da licença na empresa
+  IF v_empresa.status_licenca NOT IN ('ativa') THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Busca licença
+  SELECT * INTO v_licenca FROM public.licencas WHERE empresa_id = p_empresa_id;
+  IF NOT FOUND THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Verifica se licença está ativa
+  IF NOT v_licenca.license_active THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Verifica validade
+  IF v_licenca.data_expiracao IS NOT NULL AND v_licenca.data_expiracao < CURRENT_DATE THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Verifica limite de notas no mês
+  IF v_licenca.notas_mes_atual >= v_licenca.notas_mes_limite THEN
+    RETURN FALSE;
+  END IF;
+
+  RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
--- Trigger para atualizar contador de empresas
-CREATE OR REPLACE FUNCTION update_empresas_count()
-RETURNS TRIGGER AS $$
+-- ============================================================================
+-- Função: próximo número de RPS disponível para a empresa
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.proximo_rps(p_empresa_id UUID, p_serie VARCHAR DEFAULT '1')
+RETURNS INTEGER AS $$
+DECLARE
+  v_max INTEGER;
 BEGIN
-    IF TG_OP = 'INSERT' THEN
-        UPDATE tenants SET empresas_ativas = empresas_ativas + 1 
-        WHERE id = NEW.tenant_id;
-    ELSIF TG_OP = 'DELETE' THEN
-        UPDATE tenants SET empresas_ativas = empresas_ativas - 1 
-        WHERE id = OLD.tenant_id;
-    ELSIF TG_OP = 'UPDATE' AND OLD.ativo != NEW.ativo THEN
-        IF NEW.ativo THEN
-            UPDATE tenants SET empresas_ativas = empresas_ativas + 1 
-            WHERE id = NEW.tenant_id;
-        ELSE
-            UPDATE tenants SET empresas_ativas = empresas_ativas - 1 
-            WHERE id = NEW.tenant_id;
-        END IF;
-    END IF;
-    RETURN COALESCE(NEW, OLD);
+  SELECT COALESCE(MAX(numero_rps), 0) INTO v_max
+  FROM public.notas_fiscais
+  WHERE empresa_id = p_empresa_id AND serie_rps = p_serie;
+
+  RETURN v_max + 1;
 END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_update_empresas_count ON empresas;
-CREATE TRIGGER trg_update_empresas_count
-    AFTER INSERT OR UPDATE OR DELETE ON empresas
-    FOR EACH ROW EXECUTE FUNCTION update_empresas_count();
-
--- Trigger para atualizar contador de usuários
-CREATE OR REPLACE FUNCTION update_usuarios_count()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF TG_OP = 'INSERT' THEN
-        UPDATE tenants SET usuarios_ativos = usuarios_ativos + 1 
-        WHERE id = NEW.tenant_id;
-    ELSIF TG_OP = 'DELETE' THEN
-        UPDATE tenants SET usuarios_ativos = usuarios_ativos - 1 
-        WHERE id = OLD.tenant_id;
-    ELSIF TG_OP = 'UPDATE' AND OLD.ativo != NEW.ativo THEN
-        IF NEW.ativo THEN
-            UPDATE tenants SET usuarios_ativos = usuarios_ativos + 1 
-            WHERE id = NEW.tenant_id;
-        ELSE
-            UPDATE tenants SET usuarios_ativos = usuarios_ativos - 1 
-            WHERE id = NEW.tenant_id;
-        END IF;
-    END IF;
-    RETURN COALESCE(NEW, OLD);
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_update_usuarios_count ON usuarios;
-CREATE TRIGGER trg_update_usuarios_count
-    AFTER INSERT OR UPDATE OR DELETE ON usuarios
-    FOR EACH ROW EXECUTE FUNCTION update_usuarios_count();
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
 -- ============================================================================
--- DADOS INICIAIS DE EXEMPLO
+-- Função: criar configurações tributárias default ao criar empresa
 -- ============================================================================
+CREATE OR REPLACE FUNCTION public.on_empresa_created()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Cria config tributária default
+  INSERT INTO public.configuracoes_tributarias (empresa_id)
+  VALUES (NEW.id)
+  ON CONFLICT (empresa_id) DO NOTHING;
 
--- Descomente e ajuste para criar seu usuário master:
+  -- Cria licença default (básico, 50 notas/mês)
+  INSERT INTO public.licencas (empresa_id)
+  VALUES (NEW.id)
+  ON CONFLICT DO NOTHING;
 
-/*
--- 1. Primeiro, crie um usuário no Supabase Authentication (Dashboard > Authentication > Users)
+  -- Cria perfil owner para o criador
+  INSERT INTO public.perfis_usuarios (user_id, empresa_id, role)
+  VALUES (NEW.user_id, NEW.id, 'owner')
+  ON CONFLICT (user_id, empresa_id) DO NOTHING;
 
--- 2. Depois execute isso substituindo os valores:
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-INSERT INTO tenants (cnpj, nome, slug, email, plano, max_empresas, max_usuarios, max_notas_mes)
-VALUES (
-    '00000000000000',           -- Seu CNPJ
-    'Sua Software House',        -- Nome da sua empresa
-    'master',                    -- Slug único
-    'seu@email.com',             -- Seu email
-    'ENTERPRISE',                -- Plano (BASICO, PRO, ENTERPRISE)
-    999,                         -- Max empresas
-    999,                         -- Max usuários
-    999999                       -- Max notas/mês
-);
-
-INSERT INTO licencas (tenant_id, status, license_active, validade)
-SELECT id, 'ATIVO', true, '2099-12-31'
-FROM tenants WHERE slug = 'master';
-
--- 3. Pega o UUID do usuário que você criou no Auth e substitua abaixo:
-
-INSERT INTO usuarios (tenant_id, auth_user_id, email, nome, role)
-SELECT 
-    t.id,
-    'UUID-DO-SEU-USUARIO-AUTH',  -- Substitua pelo UUID real
-    'seu@email.com',
-    'Seu Nome',
-    'MASTER'
-FROM tenants t WHERE t.slug = 'master';
-
--- 4. Crie uma empresa de exemplo:
-
-INSERT INTO empresas (
-    tenant_id, cnpj, razao_social, inscricao_municipal, 
-    ambiente, serie_rps, regime_tributario
-)
-SELECT 
-    t.id,
-    '12345678000190',
-    'Empresa Teste LTDA',
-    '123456',
-    'HOMOLOGACAO',
-    '8',
-    'SIMPLES_NACIONAL'
-FROM tenants t WHERE t.slug = 'master';
-*/
+DROP TRIGGER IF EXISTS trg_empresa_created ON public.empresas;
+CREATE TRIGGER trg_empresa_created
+  AFTER INSERT ON public.empresas
+  FOR EACH ROW EXECUTE FUNCTION public.on_empresa_created();

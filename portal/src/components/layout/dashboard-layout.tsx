@@ -92,21 +92,31 @@ export default function DashboardLayout({
       return;
     }
 
-    // Set user from auth data
+    // Busca o role real do usuário em perfis_usuarios
+    const { data: perfil } = await supabase
+      .from('perfis_usuarios')
+      .select('role')
+      .eq('user_id', authUser.id)
+      .eq('ativo', true)
+      .order('role')   // super_admin primeiro alphabeticamente
+      .limit(1)
+      .single();
+
+    const role = perfil?.role ?? 'owner';
+
     setUser({
       id: authUser.id,
       email: authUser.email || '',
       nome: authUser.user_metadata?.razao_social || authUser.email?.split('@')[0] || 'Usuário',
-      role: 'MASTER', // Owner of their own empresa
+      role,
       tenantId: '',
       empresasPermitidas: [],
     });
 
-    // Fetch empresas for this user
+    // Fetch empresas que o usuário tem acesso (owner direto ou via perfis)
     const { data: empresasData } = await supabase
       .from('empresas')
       .select('id, cnpj, razao_social, inscricao_municipal, regime_tributario')
-      .eq('user_id', authUser.id)
       .order('razao_social');
 
     if (empresasData && empresasData.length > 0) {
