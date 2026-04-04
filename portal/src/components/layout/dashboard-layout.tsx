@@ -280,6 +280,7 @@ export default function DashboardLayout({
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={() => setSidebarOpen(false)}
                       title={sidebarCollapsed ? item.label : undefined}
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',

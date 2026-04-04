@@ -19,6 +19,9 @@ import {
   X,
   Eye,
   EyeOff,
+  Trash2,
+  Link,
+  Save,
 } from 'lucide-react';
 
 const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
@@ -184,6 +187,51 @@ function EmpresasTab() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Editable licenca state
+  const [editLicenca, setEditLicenca] = useState<Record<string, { plano: string; notas_mes_limite: number; data_expiracao: string }>>({});
+  const [savingLicenca, setSavingLicenca] = useState<string | null>(null);
+  const [licencaSuccess, setLicencaSuccess] = useState<string | null>(null);
+
+  function updateEditLicenca(empresaId: string, field: string, value: string | number) {
+    setEditLicenca(prev => ({
+      ...prev,
+      [empresaId]: { ...prev[empresaId], [field]: value },
+    }));
+  }
+
+  async function salvarLicenca(empresaId: string) {
+    const edit = editLicenca[empresaId];
+    if (!edit) return;
+    setSavingLicenca(empresaId);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/licencas', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          empresa_id: empresaId,
+          plano: edit.plano,
+          notas_mes_limite: Number(edit.notas_mes_limite),
+          data_expiracao: edit.data_expiracao || null,
+        }),
+      });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setLicencaSuccess(empresaId);
+      setTimeout(() => setLicencaSuccess(null), 2000);
+      await loadEmpresas();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSavingLicenca(null);
+    }
+  }
+
   const loadEmpresas = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -192,6 +240,11 @@ function EmpresasTab() {
       if (res.status === 403) {
         router.push('/dashboard');
         return;
+      }
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
       }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -218,6 +271,11 @@ function EmpresasTab() {
           license_active: !currentActive,
         }),
       });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
@@ -371,50 +429,143 @@ function EmpresasTab() {
                 </div>
 
                 {expanded && (
-                  <div className="px-5 pb-4 pt-0 border-t border-gray-700 mt-0">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-sm">
-                      <div>
-                        <p className="text-gray-500 text-xs">Email</p>
-                        <p className="text-gray-300">{empresa.email_empresa || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs">Telefone</p>
-                        <p className="text-gray-300">{empresa.telefone || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs">Regime</p>
-                        <p className="text-gray-300">{empresa.regime_tributario.replace(/_/g, ' ')}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs">Plano</p>
-                        <p className="text-gray-300">{empresa.licenca?.plano || 'basico'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs">IM</p>
-                        <p className="text-gray-300">{empresa.inscricao_municipal}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs">Limite Notas/Mes</p>
-                        <p className="text-gray-300">{empresa.licenca?.notas_mes_limite || 50}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs">Expiracao</p>
-                        <p className="text-gray-300">
-                          {empresa.licenca?.data_expiracao ? formatDate(empresa.licenca.data_expiracao) : 'Sem limite'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs">Total Notas</p>
-                        <p className="text-gray-300">{empresa.total_notas}</p>
-                      </div>
-                    </div>
-                  </div>
+                  <EmpresaExpandedSection
+                    empresa={empresa}
+                    editLicenca={editLicenca}
+                    setEditLicenca={setEditLicenca}
+                    updateEditLicenca={updateEditLicenca}
+                    salvarLicenca={salvarLicenca}
+                    savingLicenca={savingLicenca}
+                    licencaSuccess={licencaSuccess}
+                  />
                 )}
               </div>
             );
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Empresa Expanded Section ────────────────────────────────────────
+
+function EmpresaExpandedSection({
+  empresa,
+  editLicenca,
+  setEditLicenca,
+  updateEditLicenca,
+  salvarLicenca,
+  savingLicenca,
+  licencaSuccess,
+}: {
+  empresa: Empresa;
+  editLicenca: Record<string, { plano: string; notas_mes_limite: number; data_expiracao: string }>;
+  setEditLicenca: React.Dispatch<React.SetStateAction<Record<string, { plano: string; notas_mes_limite: number; data_expiracao: string }>>>;
+  updateEditLicenca: (empresaId: string, field: string, value: string | number) => void;
+  salvarLicenca: (empresaId: string) => void;
+  savingLicenca: string | null;
+  licencaSuccess: string | null;
+}) {
+  useEffect(() => {
+    if (!editLicenca[empresa.id]) {
+      setEditLicenca(prev => ({
+        ...prev,
+        [empresa.id]: {
+          plano: empresa.licenca?.plano || 'basico',
+          notas_mes_limite: empresa.licenca?.notas_mes_limite ?? 50,
+          data_expiracao: empresa.licenca?.data_expiracao ? empresa.licenca.data_expiracao.split('T')[0] : '',
+        },
+      }));
+    }
+  }, [empresa, editLicenca, setEditLicenca]);
+
+  const edit = editLicenca[empresa.id];
+
+  return (
+    <div className="px-5 pb-4 pt-0 border-t border-gray-700 mt-0">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-sm">
+        <div>
+          <p className="text-gray-500 text-xs">Email</p>
+          <p className="text-gray-300">{empresa.email_empresa || '-'}</p>
+        </div>
+        <div>
+          <p className="text-gray-500 text-xs">Telefone</p>
+          <p className="text-gray-300">{empresa.telefone || '-'}</p>
+        </div>
+        <div>
+          <p className="text-gray-500 text-xs">Regime</p>
+          <p className="text-gray-300">{empresa.regime_tributario.replace(/_/g, ' ')}</p>
+        </div>
+        <div>
+          <p className="text-gray-500 text-xs">IM</p>
+          <p className="text-gray-300">{empresa.inscricao_municipal}</p>
+        </div>
+        <div>
+          <p className="text-gray-500 text-xs">Total Notas</p>
+          <p className="text-gray-300">{empresa.total_notas}</p>
+        </div>
+      </div>
+
+      {/* Editable Licenca Section */}
+      <div className="border-t border-gray-700 mt-4 pt-4">
+        <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-3">
+          Licenca
+        </p>
+        {edit && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-gray-500 text-xs mb-1">Plano</label>
+                <select
+                  value={edit.plano}
+                  onChange={e => updateEditLicenca(empresa.id, 'plano', e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                             focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="basico">Basico</option>
+                  <option value="profissional">Profissional</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-500 text-xs mb-1">Limite Notas/Mes</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={edit.notas_mes_limite}
+                  onChange={e => updateEditLicenca(empresa.id, 'notas_mes_limite', parseInt(e.target.value) || 0)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                             focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-500 text-xs mb-1">Expiracao</label>
+                <input
+                  type="date"
+                  value={edit.data_expiracao}
+                  onChange={e => updateEditLicenca(empresa.id, 'data_expiracao', e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                             focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => salvarLicenca(empresa.id)}
+                disabled={savingLicenca === empresa.id}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              >
+                <Save className="w-4 h-4" />
+                {savingLicenca === empresa.id ? 'Salvando...' : 'Salvar Licenca'}
+              </button>
+              {licencaSuccess === empresa.id && (
+                <span className="text-green-400 text-sm">Salvo com sucesso!</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -436,6 +587,15 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
   // Toggling perfil ativo
   const [togglingPerfil, setTogglingPerfil] = useState<string | null>(null);
 
+  // Vincular empresa inline form
+  const [vincularUserId, setVincularUserId] = useState<string | null>(null);
+  const [vincularEmpresaId, setVincularEmpresaId] = useState('');
+  const [vincularRole, setVincularRole] = useState('emissor');
+  const [vincularLoading, setVincularLoading] = useState(false);
+
+  // Excluir usuario
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -446,12 +606,14 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
       ]);
 
       if (!usersRes.ok) {
-        const text = await usersRes.text();
-        throw new Error(text ? JSON.parse(text).error || `Erro ${usersRes.status}` : `Erro ${usersRes.status}`);
+        let msg = `Erro ${usersRes.status}`;
+        try { const j = await usersRes.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
       }
       if (!empresasRes.ok) {
-        const text = await empresasRes.text();
-        throw new Error(text ? JSON.parse(text).error || `Erro ${empresasRes.status}` : `Erro ${empresasRes.status}`);
+        let msg = `Erro ${empresasRes.status}`;
+        try { const j = await empresasRes.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
       }
 
       const usersData = await usersRes.json();
@@ -480,6 +642,11 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
           perfis: [{ empresa_id: empresaId, ativo: !currentAtivo }],
         }),
       });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
@@ -498,6 +665,84 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
       setError(err.message);
     } finally {
       setTogglingPerfil(null);
+    }
+  }
+
+  async function vincularEmpresa(userId: string) {
+    if (!vincularEmpresaId) return;
+    setVincularLoading(true);
+    try {
+      const res = await fetch(`/api/admin/usuarios/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          perfis: [{ empresa_id: vincularEmpresaId, role: vincularRole, ativo: true }],
+        }),
+      });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setVincularUserId(null);
+      setVincularEmpresaId('');
+      setVincularRole('emissor');
+      await loadData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setVincularLoading(false);
+    }
+  }
+
+  async function removerPerfil(userId: string, empresaId: string) {
+    const key = `${userId}-${empresaId}`;
+    setTogglingPerfil(key);
+    try {
+      const res = await fetch(`/api/admin/usuarios/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          perfis: [{ empresa_id: empresaId, ativo: false }],
+        }),
+      });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setTogglingPerfil(null);
+    }
+  }
+
+  async function excluirUsuario(userId: string) {
+    if (!confirm('Tem certeza que deseja excluir este usuario? Todos os perfis serao desativados.')) return;
+    setDeletingUserId(userId);
+    try {
+      const res = await fetch(`/api/admin/usuarios/${userId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setExpandedId(null);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDeletingUserId(null);
     }
   }
 
@@ -683,28 +928,115 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                                   </div>
                                 </div>
 
-                                <button
-                                  onClick={() => togglePerfilAtivo(user.id, perfil.empresa_id, perfil.ativo)}
-                                  disabled={togglingPerfil === key}
-                                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50
-                                    ${
-                                      perfil.ativo
-                                        ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
-                                        : 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
-                                    }`}
-                                >
-                                  {perfil.ativo ? (
-                                    <UserX className="w-3 h-3" />
-                                  ) : (
-                                    <UserCheck className="w-3 h-3" />
-                                  )}
-                                  {togglingPerfil === key ? '...' : perfil.ativo ? 'Desativar' : 'Ativar'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => togglePerfilAtivo(user.id, perfil.empresa_id, perfil.ativo)}
+                                    disabled={togglingPerfil === key}
+                                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50
+                                      ${
+                                        perfil.ativo
+                                          ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
+                                          : 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
+                                      }`}
+                                  >
+                                    {perfil.ativo ? (
+                                      <UserX className="w-3 h-3" />
+                                    ) : (
+                                      <UserCheck className="w-3 h-3" />
+                                    )}
+                                    {togglingPerfil === key ? '...' : perfil.ativo ? 'Desativar' : 'Ativar'}
+                                  </button>
+                                  <button
+                                    onClick={() => removerPerfil(user.id, perfil.empresa_id)}
+                                    disabled={togglingPerfil === key}
+                                    className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50
+                                      bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                                    title="Remover perfil"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
                             );
                           })}
                         </div>
                       )}
+
+                      {/* Vincular a Empresa */}
+                      {vincularUserId === user.id ? (
+                        <div className="bg-gray-900/50 rounded-lg px-4 py-3 mt-3 space-y-3">
+                          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">
+                            Vincular a Empresa
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <select
+                              value={vincularEmpresaId}
+                              onChange={e => setVincularEmpresaId(e.target.value)}
+                              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                                         focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                              <option value="">Selecionar empresa...</option>
+                              {empresas
+                                .filter(emp => !user.perfis.some(p => p.empresa_id === emp.id))
+                                .map(emp => (
+                                  <option key={emp.id} value={emp.id}>
+                                    {emp.razao_social}
+                                  </option>
+                                ))}
+                            </select>
+                            <select
+                              value={vincularRole}
+                              onChange={e => setVincularRole(e.target.value)}
+                              className="w-full sm:w-36 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                                         focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                              <option value="emissor">Emissor</option>
+                              <option value="visualizador">Visualizador</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => vincularEmpresa(user.id)}
+                                disabled={vincularLoading || !vincularEmpresaId}
+                                className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                              >
+                                <Link className="w-3.5 h-3.5" />
+                                {vincularLoading ? '...' : 'Vincular'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setVincularUserId(null);
+                                  setVincularEmpresaId('');
+                                  setVincularRole('emissor');
+                                }}
+                                className="text-gray-400 hover:text-white px-3 py-2 text-sm transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setVincularUserId(user.id)}
+                          className="flex items-center gap-2 mt-3 text-xs text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                        >
+                          <Link className="w-3.5 h-3.5" />
+                          Vincular a Empresa
+                        </button>
+                      )}
+
+                      {/* Excluir Usuario */}
+                      <div className="pt-3 mt-3 border-t border-gray-700">
+                        <button
+                          onClick={() => excluirUsuario(user.id)}
+                          disabled={deletingUserId === user.id}
+                          className="flex items-center gap-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {deletingUserId === user.id ? 'Excluindo...' : 'Excluir Usuario'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -756,6 +1088,11 @@ function ConfiguracoesTab() {
       setLoading(true);
       try {
         const res = await fetch('/api/admin/empresas');
+        if (!res.ok) {
+          let msg = `Erro ${res.status}`;
+          try { const j = await res.json(); msg = j.error || msg; } catch {}
+          throw new Error(msg);
+        }
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         setEmpresas(data.empresas || []);
@@ -778,6 +1115,11 @@ function ConfiguracoesTab() {
     try {
       // Use admin empresas endpoint to get full info - the empresa data already contains config
       const res = await fetch('/api/admin/empresas');
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       const emp = (data.empresas || []).find((e: any) => e.id === empresaId);
@@ -952,6 +1294,11 @@ function CreateUserModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, senha, perfis: validPerfis }),
       });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       onCreated();
@@ -1131,6 +1478,11 @@ function ResetPasswordModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senha: novaSenha }),
       });
+      if (!res.ok) {
+        let msg = `Erro ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setSuccess(true);

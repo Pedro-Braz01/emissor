@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createNfseService } from '@/services/nfse-service';
 import { headers } from 'next/headers';
 
-// ── Schema de validação (compatível com o formato do frontend) ──────
+// ── Schema de validação ──
 const EmitirSchema = z.object({
   empresaId: z.string().uuid(),
   tomador: z.object({
     cpfCnpj: z.string().min(11),
     razaoSocial: z.string().min(2),
-    email: z.string().email().optional(),
+    email: z.string().email().optional().or(z.literal('')),
     telefone: z.string().optional(),
     endereco: z.object({
       cep: z.string().optional(),
@@ -25,19 +26,29 @@ const EmitirSchema = z.object({
     discriminacao: z.string().min(5),
     itemListaServico: z.string().optional(),
     issRetido: z.boolean().default(false),
+    codigoCnae: z.string().optional(),
+    codigoNbs: z.string().optional(),
   }),
+  retencoes: z.object({
+    pis: z.number().default(0),
+    cofins: z.number().default(0),
+    inss: z.number().default(0),
+    irrf: z.number().default(0),
+    csll: z.number().default(0),
+  }).optional(),
+  enviarParaTomador: z.boolean().default(false),
 });
 
 export async function POST(request: Request) {
   const supabase = createServerSupabaseClient();
 
-  // ── Auth (usa getUser() por segurança) ──
+  // ── Auth ──
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
-  // ── IP do cliente ──
+  // ── IP ──
   const headersList = headers();
   const ip =
     headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -52,22 +63,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Dados inválidos', details: err }, { status: 400 });
   }
 
-  // ── Busca empresa ──
-  const { data: empresa, error: empresaError } = await supabase
-    .from('empresas')
-    .select('*')
-    .eq('id', body.empresaId)
-    .single();
-
-  if (empresaError || !empresa) {
-    return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 });
-  }
-
-  // ── Verifica licença (Kill Switch) ──
+  // ── Verifica licença ──
   const { data: licenca } = await supabase
     .from('licencas')
     .select('*')
-    .eq('empresa_id', empresa.id)
+    .eq('empresa_id', body.empresaId)
     .single();
 
   if (!licenca?.license_active) {
@@ -77,115 +77,103 @@ export async function POST(request: Request) {
     );
   }
 
-  // ── Busca configurações tributárias ──
-  const { data: configTrib } = await supabase
-    .from('configuracoes_tributarias')
-    .select('*')
-    .eq('empresa_id', empresa.id)
-    .single();
-
-  const aliquotas = {
-    iss:    configTrib?.aliquota_iss    ?? 2.0,
-    pis:    configTrib?.aliquota_pis    ?? 0.65,
-    cofins: configTrib?.aliquota_cofins ?? 3.0,
-    csll:   configTrib?.aliquota_csll   ?? 1.0,
-    irrf:   configTrib?.aliquota_irrf   ?? 1.5,
-    inss:   configTrib?.aliquota_inss   ?? 11.0,
-  };
-
-  // ── Cálculo de impostos ──
-  const baseCalculo = body.servico.valorServicos;
-  const impostos = calcularImpostos(baseCalculo, aliquotas, empresa.regime_tributario);
-
-  // ── Próximo número de RPS ──
-  const { count } = await supabase
-    .from('notas_fiscais')
-    .select('id', { count: 'exact', head: true })
-    .eq('empresa_id', empresa.id);
-
-  const numero_rps = (count ?? 0) + 1;
-
-  // ── Insere nota como pendente ──
-  const { data: nota, error: insertError } = await supabase
-    .from('notas_fiscais')
-    .insert({
-      empresa_id: empresa.id,
-      numero_rps,
-      serie_rps: '1',
-      tipo_rps: 'RPS',
-      status: 'pendente',
-      tomador_razao_social: body.tomador.razaoSocial,
-      tomador_cnpj_cpf: body.tomador.cpfCnpj,
-      tomador_email: body.tomador.email ?? null,
-      tomador_inscricao_municipal: null,
-      valor_servicos: body.servico.valorServicos,
-      valor_deducoes: 0,
-      valor_base_calculo: baseCalculo,
-      valor_iss: impostos.iss,
-      valor_pis: impostos.pis,
-      valor_cofins: impostos.cofins,
-      valor_csll: impostos.csll,
-      valor_irrf: impostos.irrf,
-      valor_inss: impostos.inss,
-      valor_liquido: body.servico.valorServicos - impostos.iss - impostos.irrf - impostos.csll - impostos.pis - impostos.cofins - impostos.inss,
-      discriminacao: body.servico.discriminacao,
-      municipio_prestacao: '3543402',
-      created_by: user.id,
-      created_by_ip: ip,
-    })
-    .select()
-    .single();
-
-  if (insertError || !nota) {
-    return NextResponse.json({ error: 'Erro ao criar nota', details: insertError?.message }, { status: 500 });
+  // ── Verifica limite mensal ──
+  if (licenca.notas_mes_atual >= licenca.notas_mes_limite) {
+    return NextResponse.json(
+      { error: `Limite mensal de ${licenca.notas_mes_limite} notas atingido.` },
+      { status: 403 }
+    );
   }
 
-  // ── Audit log ──
-  await supabase.from('audit_logs').insert({
-    empresa_id: empresa.id,
-    user_id: user.id,
-    acao: 'nota_criada',
-    detalhes: { nota_id: nota.id, numero_rps, valor: body.servico.valorServicos },
-    ip,
-  });
+  // ── Verifica expiração ──
+  if (licenca.data_expiracao && new Date(licenca.data_expiracao) < new Date()) {
+    return NextResponse.json(
+      { error: 'Licença expirada. Entre em contato com o suporte.' },
+      { status: 403 }
+    );
+  }
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      notaId: nota.id,
-      numeroRps: numero_rps,
-      numeroNfse: nota.numero_nfse,
-      codigoVerificacao: nota.codigo_verificacao,
+  // ── Emite via NfseService ──
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY!;
+  const encryptionKey = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
+  const ambiente = (process.env.NFSE_AMBIENTE || 'homologacao') as 'homologacao' | 'producao';
+
+  const nfseService = createNfseService(supabaseUrl, supabaseKey, ambiente, encryptionKey);
+
+  const result = await nfseService.emitir(
+    {
+      empresaId: body.empresaId,
+      tomador: {
+        cpfCnpj: body.tomador.cpfCnpj,
+        razaoSocial: body.tomador.razaoSocial,
+        email: body.tomador.email || undefined,
+        telefone: body.tomador.telefone || undefined,
+        endereco: body.tomador.endereco ? {
+          logradouro: body.tomador.endereco.logradouro,
+          numero: body.tomador.endereco.numero,
+          complemento: body.tomador.endereco.complemento,
+          bairro: body.tomador.endereco.bairro,
+          cep: body.tomador.endereco.cep,
+          uf: body.tomador.endereco.uf,
+          codigoMunicipio: '3543402',
+        } : undefined,
+      },
+      servico: {
+        valorServicos: body.servico.valorServicos,
+        discriminacao: body.servico.discriminacao,
+        itemListaServico: body.servico.itemListaServico,
+        codigoCnae: body.servico.codigoCnae,
+        issRetido: body.servico.issRetido,
+      },
     },
-    message: 'Nota criada e enviada para a fila de emissão.',
-  });
-}
+    user.id,
+    user.email || 'Usuário',
+    ip
+  );
 
-// ── Camada de cálculo de impostos ────────────────
-function calcularImpostos(
-  base: number,
-  aliquotas: Record<string, number>,
-  regime: string
-) {
-  const pct = (v: number, a: number) => parseFloat((v * (a / 100)).toFixed(2));
+  // ── Incrementa contador mensal ──
+  if (result.success) {
+    await supabase.rpc('incrementar_notas_mes', { p_empresa_id: body.empresaId });
 
-  if (regime === 'simples_nacional') {
-    return {
-      iss:    pct(base, aliquotas.iss),
-      pis:    0,
-      cofins: 0,
-      csll:   0,
-      irrf:   0,
-      inss:   0,
-    };
+    // ── Audit log ──
+    await supabase.from('audit_logs').insert({
+      empresa_id: body.empresaId,
+      user_id: user.id,
+      acao: 'nfse_emitida',
+      detalhes: {
+        nota_id: result.notaId,
+        numero_rps: result.numeroRps,
+        numero_nfse: result.numeroNfse,
+        codigo_verificacao: result.codigoVerificacao,
+        valor: body.servico.valorServicos,
+      },
+      ip,
+    });
   }
 
-  return {
-    iss:    pct(base, aliquotas.iss),
-    pis:    pct(base, aliquotas.pis),
-    cofins: pct(base, aliquotas.cofins),
-    csll:   pct(base, aliquotas.csll),
-    irrf:   base >= 215.05 ? pct(base, aliquotas.irrf) : 0,
-    inss:   pct(base, aliquotas.inss),
-  };
+  if (result.success) {
+    return NextResponse.json({
+      success: true,
+      data: {
+        notaId: result.notaId,
+        numeroRps: result.numeroRps,
+        numeroNfse: result.numeroNfse,
+        codigoVerificacao: result.codigoVerificacao,
+        linkNfse: result.linkNfse,
+      },
+      message: 'NFSe emitida com sucesso!',
+    });
+  } else {
+    // Nota was created but emission failed - return the error with nota ID
+    return NextResponse.json({
+      success: false,
+      error: result.error,
+      errors: result.errors,
+      data: {
+        notaId: result.notaId,
+        numeroRps: result.numeroRps,
+      },
+    }, { status: 422 });
+  }
 }

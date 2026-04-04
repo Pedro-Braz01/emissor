@@ -311,7 +311,8 @@ export default function EmitirPage() {
 
   // ── Atividade Municipal dropdown logic (filtra por LC116 quando preenchido) ──
   useEffect(() => {
-    const lc116Prefix = itemLc116 ? itemLc116.replace(/\./g, '') : '';
+    // Remove dots and leading zeros: "04.01" → "0401" → "401"
+    const lc116Prefix = itemLc116 ? itemLc116.replace(/\./g, '').replace(/^0+/, '') : '';
     let base = lc116Prefix
       ? ATIVIDADES_MUNICIPAIS.filter(a => a.codigo.startsWith(lc116Prefix))
       : ATIVIDADES_MUNICIPAIS;

@@ -342,11 +342,14 @@ export default function ConfiguracoesEmpresaPage() {
                   <button
                     key={item.codigo}
                     onClick={() => handleAddCnae(item)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-start gap-2"
                   >
-                    <Plus className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                    <span className="font-mono text-xs text-gray-500">{item.codigo}</span>
-                    <span className="truncate">{item.descricao}</span>
+                    <Plus className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
+                    <span>
+                      <span className="font-mono text-xs text-gray-500">{item.codigo}</span>
+                      {' - '}
+                      <span className="text-gray-900">{item.descricao}</span>
+                    </span>
                   </button>
                 ))}
               </div>

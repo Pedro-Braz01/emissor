@@ -16,7 +16,11 @@ import {
   ChevronRight,
   Loader2,
   Calendar,
+  FileSpreadsheet,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface Nota {
   id: string;
@@ -131,6 +135,117 @@ export default function NotasPage() {
     );
   });
 
+  const exportPDF = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(16);
+    doc.text('Consulta de Notas Fiscais', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Empresa: ${empresa?.razaoSocial || ''}`, 14, 22);
+    if (filtroDataInicio || filtroDataFim) {
+      doc.text(`Período: ${filtroDataInicio || '...'} a ${filtroDataFim || '...'}`, 14, 28);
+    }
+
+    const rows = notasFiltradas.map(n => [
+      n.numero_nfse ? `NFSe ${n.numero_nfse}` : `RPS ${n.numero_rps}`,
+      formatDate(n.data_emissao),
+      n.tomadores?.razao_social || '-',
+      n.tomadores?.cpf_cnpj ? formatCpfCnpj(n.tomadores.cpf_cnpj) : '-',
+      formatCurrency(Number(n.valor_servicos)),
+      formatCurrency(Number(n.valor_iss)),
+      statusLabels[n.status] || n.status,
+    ]);
+
+    (doc as any).autoTable({
+      startY: filtroDataInicio || filtroDataFim ? 33 : 27,
+      head: [['Número', 'Data', 'Tomador', 'CPF/CNPJ', 'Valor', 'ISS', 'Status']],
+      body: rows,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save(`notas_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const exportXLS = () => {
+    const data = notasFiltradas.map(n => ({
+      'Número NFSe': n.numero_nfse || '',
+      'RPS': `${n.numero_rps}/${n.serie_rps}`,
+      'Data Emissão': formatDate(n.data_emissao),
+      'Tomador': n.tomadores?.razao_social || '',
+      'CPF/CNPJ': n.tomadores?.cpf_cnpj ? formatCpfCnpj(n.tomadores.cpf_cnpj) : '',
+      'Valor Serviços': Number(n.valor_servicos),
+      'ISS': Number(n.valor_iss),
+      'Status': statusLabels[n.status] || n.status,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Notas');
+    XLSX.writeFile(wb, `notas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const exportXML = () => {
+    const escapeXml = (str: string) =>
+      str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+
+    const buildNfseXml = (nota: Nota) => {
+      const numero = nota.numero_nfse?.toString() || '';
+      const codigo = nota.codigo_verificacao || '';
+      const dataEmissao = nota.data_emissao || '';
+      const valorServicos = Number(nota.valor_servicos).toFixed(2);
+      const valorIss = Number(nota.valor_iss).toFixed(2);
+      const prestadorRazao = escapeXml(empresa?.razaoSocial || '');
+      const tomadorRazao = escapeXml(nota.tomadores?.razao_social || '');
+      const tomadorCpfCnpj = escapeXml(nota.tomadores?.cpf_cnpj || '');
+      const discriminacao = escapeXml(nota.discriminacao || '');
+
+      return `  <CompNfse>
+    <Nfse>
+      <InfNfse>
+        <Numero>${numero}</Numero>
+        <CodigoVerificacao>${codigo}</CodigoVerificacao>
+        <DataEmissao>${dataEmissao}</DataEmissao>
+        <Valores>
+          <ValorServicos>${valorServicos}</ValorServicos>
+          <ValorIss>${valorIss}</ValorIss>
+        </Valores>
+        <PrestadorServico>
+          <RazaoSocial>${prestadorRazao}</RazaoSocial>
+        </PrestadorServico>
+        <TomadorServico>
+          <RazaoSocial>${tomadorRazao}</RazaoSocial>
+          <CpfCnpj>${tomadorCpfCnpj}</CpfCnpj>
+        </TomadorServico>
+        <Discriminacao>${discriminacao}</Discriminacao>
+      </InfNfse>
+    </Nfse>
+  </CompNfse>`;
+    };
+
+    let xmlContent: string;
+    if (notasFiltradas.length === 1) {
+      xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n${buildNfseXml(notasFiltradas[0]).trim()}`;
+    } else {
+      const nfseElements = notasFiltradas.map(buildNfseXml).join('\n');
+      xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<ListaNfse>\n${nfseElements}\n</ListaNfse>`;
+    }
+
+    const blob = new Blob([xmlContent], { type: 'application/xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `notas_${new Date().toISOString().slice(0, 10)}.xml`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -142,10 +257,20 @@ export default function NotasPage() {
               {totalCount} nota{totalCount !== 1 ? 's' : ''} encontrada{totalCount !== 1 ? 's' : ''}
             </p>
           </div>
-          <button className="btn btn-outline">
-            <Download className="h-4 w-4" />
-            Exportar
-          </button>
+          <div className="flex gap-2">
+            <button onClick={exportXML} className="btn btn-outline" disabled={notasFiltradas.length === 0}>
+              <FileText className="h-4 w-4" />
+              XML
+            </button>
+            <button onClick={exportPDF} className="btn btn-outline" disabled={notasFiltradas.length === 0}>
+              <Download className="h-4 w-4" />
+              PDF
+            </button>
+            <button onClick={exportXLS} className="btn btn-outline" disabled={notasFiltradas.length === 0}>
+              <FileSpreadsheet className="h-4 w-4" />
+              Excel
+            </button>
+          </div>
         </div>
 
         {/* Filtros */}
