@@ -80,15 +80,26 @@ export default function AdminPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) {
           setCurrentUserEmail(user.email);
+        } else {
+          // Not authenticated, redirect
+          router.push('/login');
         }
       } catch {
-        // ignore
+        router.push('/login');
       } finally {
         setLoadingAuth(false);
       }
     }
     fetchCurrentUser();
-  }, []);
+  }, [router]);
+
+  // Block non-admin users: only master email can access admin panel
+  const isAllowedAdmin = currentUserEmail === MASTER_EMAIL;
+
+  if (!loadingAuth && currentUserEmail && !isAllowedAdmin) {
+    router.push('/dashboard');
+    return null;
+  }
 
   const tabs: { key: TabKey; label: string; icon: React.ReactNode; masterOnly?: boolean }[] = [
     { key: 'empresas', label: 'Empresas', icon: <Building2 className="w-4 h-4" /> },
@@ -433,14 +444,22 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
         fetch('/api/admin/usuarios'),
         fetch('/api/admin/empresas'),
       ]);
+
+      if (!usersRes.ok) {
+        const text = await usersRes.text();
+        throw new Error(text ? JSON.parse(text).error || `Erro ${usersRes.status}` : `Erro ${usersRes.status}`);
+      }
+      if (!empresasRes.ok) {
+        const text = await empresasRes.text();
+        throw new Error(text ? JSON.parse(text).error || `Erro ${empresasRes.status}` : `Erro ${empresasRes.status}`);
+      }
+
       const usersData = await usersRes.json();
       const empresasData = await empresasRes.json();
-      if (usersData.error) throw new Error(usersData.error);
-      if (empresasData.error) throw new Error(empresasData.error);
       setUsuarios(usersData.usuarios || []);
       setEmpresas(empresasData.empresas || []);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Erro ao carregar dados');
     } finally {
       setLoading(false);
     }

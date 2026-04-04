@@ -11,10 +11,13 @@ function getAdminClient() {
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
+const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
+
 async function isAdmin(supabase: ReturnType<typeof createServerSupabaseClient>): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
-  if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(user.email || '')) return false;
+  const allAdmins = ADMIN_EMAILS.length > 0 ? ADMIN_EMAILS : [MASTER_EMAIL];
+  if (!allAdmins.includes(user.email || '')) return false;
   return true;
 }
 

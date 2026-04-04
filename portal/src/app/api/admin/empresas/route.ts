@@ -12,12 +12,13 @@ function getAdminClient() {
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
+const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
+
 async function isAdmin(supabase: ReturnType<typeof createServerSupabaseClient>): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  // Check if user email is in admin list
-  if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(user.email || '')) return null;
-  // If no ADMIN_EMAILS configured, allow the first user (dev mode)
+  const allAdmins = ADMIN_EMAILS.length > 0 ? ADMIN_EMAILS : [MASTER_EMAIL];
+  if (!allAdmins.includes(user.email || '')) return null;
   return user.id;
 }
 

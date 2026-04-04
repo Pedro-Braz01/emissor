@@ -13,6 +13,10 @@ import {
   type CnaeItem, type Lc116Item, type NbsItem,
 } from '@/lib/dados-prefeitura';
 import {
+  ATIVIDADES_MUNICIPAIS, searchAtividadeMunicipal,
+  type AtividadeMunicipal,
+} from '@/lib/dados-atividades-municipais';
+import {
   FileText,
   Send,
   Loader2,
@@ -110,8 +114,18 @@ export default function EmitirPage() {
   const [selectedNbs, setSelectedNbs] = useState<NbsItem | null>(null);
   const [filteredNbs, setFilteredNbs] = useState<NbsItem[]>([]);
 
+  // ── Dropdown Atividade Municipal ──
+  const [atividadeMunSearch, setAtividadeMunSearch] = useState('');
+  const [atividadeMunDropdownOpen, setAtividadeMunDropdownOpen] = useState(false);
+  const [selectedAtividadeMun, setSelectedAtividadeMun] = useState<AtividadeMunicipal | null>(null);
+  const [filteredAtividadesMun, setFilteredAtividadesMun] = useState<AtividadeMunicipal[]>([]);
+
+  // ── CNAEs cadastrados da empresa ──
+  const [cnaesDaEmpresa, setCnaesDaEmpresa] = useState<CnaeItem[]>([]);
+
   const cnaeRef = useRef<HTMLDivElement>(null);
   const nbsRef = useRef<HTMLDivElement>(null);
+  const atividadeMunRef = useRef<HTMLDivElement>(null);
 
   // ── DESCONTOS ──
   const [descontoCondicionado, setDescontoCondicionado] = useState('0');
@@ -127,7 +141,7 @@ export default function EmitirPage() {
   const [outrasRetencoes, setOutrasRetencoes] = useState('0');
   const [issRetido, setIssRetido] = useState(false);
 
-  // ── Carrega config tributária ──
+  // ── Carrega config tributária + CNAEs da empresa ──
   useEffect(() => {
     if (!empresa?.id) return;
     const supabase = createClientSupabaseClient();
@@ -141,6 +155,33 @@ export default function EmitirPage() {
           setConfig(data as ConfigTributaria);
           setAliquotaIss(String(data.aliquota_iss ?? 2));
           setIssRetido(data.iss_retido_fonte ?? false);
+        }
+      });
+
+    // Carrega CNAEs cadastrados da empresa
+    supabase
+      .from('empresas')
+      .select('cnaes_cadastrados')
+      .eq('id', empresa.id)
+      .single()
+      .then(({ data }) => {
+        const cadastrados = (data as any)?.cnaes_cadastrados || [];
+        if (cadastrados.length > 0) {
+          // Mapeia para CnaeItem buscando LC116 correlations
+          const mapped: CnaeItem[] = cadastrados.map((c: any) => {
+            const full = CNAES.find(cn => cn.codigo === c.codigo);
+            return { codigo: c.codigo, descricao: c.descricao, lc116: full?.lc116 || [] };
+          });
+          setCnaesDaEmpresa(mapped);
+
+          // Auto-seleciona o CNAE padrão
+          const padrao = cadastrados.find((c: any) => c.padrao);
+          if (padrao && !cnaeInput) {
+            const item = mapped.find(m => m.codigo === padrao.codigo);
+            if (item) {
+              handleSelectCnae(item);
+            }
+          }
         }
       });
   }, [empresa?.id]);
@@ -220,14 +261,22 @@ export default function EmitirPage() {
     }
   };
 
-  // ── CNAE dropdown logic ──
+  // ── CNAE dropdown logic (usa CNAEs da empresa quando cadastrados) ──
   useEffect(() => {
+    const source = cnaesDaEmpresa.length > 0 ? cnaesDaEmpresa : CNAES;
     if (cnaeSearch.length >= 1) {
-      setFilteredCnaes(searchCnae(cnaeSearch).slice(0, 20));
+      if (cnaesDaEmpresa.length > 0) {
+        const q = cnaeSearch.toLowerCase();
+        setFilteredCnaes(source.filter(c =>
+          c.codigo.includes(q) || c.descricao.toLowerCase().includes(q)
+        ).slice(0, 20));
+      } else {
+        setFilteredCnaes(searchCnae(cnaeSearch).slice(0, 20));
+      }
     } else {
-      setFilteredCnaes(CNAES.slice(0, 20));
+      setFilteredCnaes(source.slice(0, 20));
     }
-  }, [cnaeSearch]);
+  }, [cnaeSearch, cnaesDaEmpresa]);
 
   const handleSelectCnae = (item: CnaeItem) => {
     setSelectedCnae(item);
@@ -242,8 +291,6 @@ export default function EmitirPage() {
     } else if (lc116Items.length > 1) {
       setItemLc116('');
     }
-    // Auto-fill atividade municipal com CNAE
-    setAtividadeMunicipal(item.codigo);
   };
 
   // ── NBS dropdown logic ──
@@ -262,6 +309,31 @@ export default function EmitirPage() {
     setNbsDropdownOpen(false);
   };
 
+  // ── Atividade Municipal dropdown logic (filtra por LC116 quando preenchido) ──
+  useEffect(() => {
+    const lc116Prefix = itemLc116 ? itemLc116.replace(/\./g, '') : '';
+    let base = lc116Prefix
+      ? ATIVIDADES_MUNICIPAIS.filter(a => a.codigo.startsWith(lc116Prefix))
+      : ATIVIDADES_MUNICIPAIS;
+    if (atividadeMunSearch.length >= 1) {
+      const q = atividadeMunSearch.toLowerCase();
+      base = base.filter(a => a.codigo.includes(q) || a.descricao.toLowerCase().includes(q));
+    }
+    setFilteredAtividadesMun(base.slice(0, 20));
+  }, [atividadeMunSearch, itemLc116]);
+
+  const handleSelectAtividadeMun = (item: AtividadeMunicipal) => {
+    setSelectedAtividadeMun(item);
+    setAtividadeMunicipal(item.codigo);
+    setAtividadeMunSearch(`${item.codigo} - ${item.descricao}`);
+    setAtividadeMunDropdownOpen(false);
+    // Auto-fill aliquota ISS from atividade municipal
+    const aliq = parseFloat(item.aliquota.replace('%', '').replace(',', '.'));
+    if (!isNaN(aliq) && aliq > 0) {
+      setAliquotaIss(String(aliq));
+    }
+  };
+
   // ── Click outside to close dropdowns ──
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -270,6 +342,9 @@ export default function EmitirPage() {
       }
       if (nbsRef.current && !nbsRef.current.contains(e.target as Node)) {
         setNbsDropdownOpen(false);
+      }
+      if (atividadeMunRef.current && !atividadeMunRef.current.contains(e.target as Node)) {
+        setAtividadeMunDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -568,7 +643,7 @@ export default function EmitirPage() {
                     }
                   }}
                   onFocus={() => setCnaeDropdownOpen(true)}
-                  placeholder="Digite código ou descrição do CNAE..."
+                  placeholder={cnaesDaEmpresa.length > 0 ? "Selecione o CNAE da empresa..." : "Digite código ou descrição do CNAE..."}
                   className={inputCls}
                 />
                 {cnaeDropdownOpen && filteredCnaes.length > 0 && (
@@ -593,13 +668,18 @@ export default function EmitirPage() {
                 {lc116Options.length > 0 ? (
                   <select
                     value={itemLc116}
-                    onChange={e => setItemLc116(e.target.value)}
+                    onChange={e => {
+                      setItemLc116(e.target.value);
+                      setAtividadeMunSearch('');
+                      setSelectedAtividadeMun(null);
+                      setAtividadeMunicipal('');
+                    }}
                     className={selectCls}
                   >
                     <option value="">Selecione...</option>
                     {lc116Options.map(item => (
                       <option key={item.codigo} value={item.codigo}>
-                        {item.codigo} - {item.descricao}
+                        {item.descricao}
                       </option>
                     ))}
                   </select>
@@ -614,15 +694,37 @@ export default function EmitirPage() {
                 <p className="text-xs text-gray-500 mt-1">Correlação automática pelo CNAE ou editar manualmente.</p>
               </div>
 
-              {/* Atividade Município - Auto-filled from CNAE */}
-              <div>
+              {/* Atividade Município - Searchable dropdown from TribMun data */}
+              <div ref={atividadeMunRef} className="relative">
                 <label className={labelCls}>Atividade Município</label>
                 <input
-                  value={atividadeMunicipal}
-                  onChange={e => setAtividadeMunicipal(e.target.value)}
-                  placeholder="Preenchido automaticamente pelo CNAE"
+                  value={atividadeMunSearch}
+                  onChange={e => {
+                    setAtividadeMunSearch(e.target.value);
+                    setAtividadeMunDropdownOpen(true);
+                    if (!e.target.value) {
+                      setSelectedAtividadeMun(null);
+                      setAtividadeMunicipal('');
+                    }
+                  }}
+                  onFocus={() => setAtividadeMunDropdownOpen(true)}
+                  placeholder="Digite código ou descrição da atividade..."
                   className={inputCls}
                 />
+                {atividadeMunDropdownOpen && filteredAtividadesMun.length > 0 && (
+                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-600 bg-gray-700 shadow-lg">
+                    {filteredAtividadesMun.map(item => (
+                      <li
+                        key={item.codigo}
+                        onClick={() => handleSelectAtividadeMun(item)}
+                        className="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-blue-600 hover:text-white"
+                      >
+                        {item.codigo} - {item.descricao} ({item.aliquota})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Conforme cadastro na prefeitura. Alíquota ISS preenchida automaticamente.</p>
               </div>
 
               {/* Código NBS - Searchable dropdown */}

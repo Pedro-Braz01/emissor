@@ -17,15 +17,21 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Bell,
   Shield,
   Upload,
   BarChart3,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 
 // ===================
 // MENU ITEMS
 // ===================
+
+const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
 
 const menuItems = [
   {
@@ -44,6 +50,11 @@ const menuItems = [
     icon: Search,
   },
   {
+    label: 'Relatórios',
+    href: '/relatorios',
+    icon: BarChart3,
+  },
+  {
     label: 'Config. Tributárias',
     href: '/configuracoes/tributarias',
     icon: Settings,
@@ -57,6 +68,7 @@ const menuItems = [
     label: 'Admin',
     href: '/admin',
     icon: Shield,
+    adminOnly: true,
   },
 ];
 
@@ -73,7 +85,11 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const user = useUser();
   const empresa = useEmpresa();
-  const { sidebarOpen, setSidebarOpen, setUser, setEmpresaSelecionada, setEmpresas, setLicenca } = useAppStore();
+  const {
+    sidebarOpen, setSidebarOpen,
+    sidebarCollapsed, setSidebarCollapsed,
+    setUser, setEmpresaSelecionada, setEmpresas, setLicenca,
+  } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [empresas, setEmpresasList] = useState<any[]>([]);
   const [empresaDropdownOpen, setEmpresaDropdownOpen] = useState(false);
@@ -178,29 +194,41 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 transform bg-white shadow-lg transition-transform duration-200 lg:static lg:translate-x-0',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed inset-y-0 left-0 z-50 transform bg-white shadow-lg transition-all duration-200 lg:static lg:translate-x-0',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          sidebarCollapsed ? 'w-16' : 'w-64'
         )}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between border-b px-4">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white">
-                <FileText className="h-5 w-5" />
-              </div>
-              <span className="font-bold text-gray-900">NFSe Emissor</span>
-            </Link>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
-            >
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
+          <div className="flex h-16 items-center justify-between border-b px-3">
+            {!sidebarCollapsed ? (
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white shrink-0">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <span className="font-bold text-gray-900">NFSe Emissor</span>
+              </Link>
+            ) : (
+              <Link href="/dashboard" className="mx-auto">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white">
+                  <FileText className="h-5 w-5" />
+                </div>
+              </Link>
+            )}
+            {/* Close button - mobile only */}
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="lg:hidden"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            )}
           </div>
 
           {/* Seletor de Empresa */}
-          {empresas.length > 0 && (
+          {empresas.length > 0 && !sidebarCollapsed && (
             <div className="border-b p-4">
               <div className="relative">
                 <button
@@ -240,9 +268,11 @@ export default function DashboardLayout({
           )}
 
           {/* Menu */}
-          <nav className="flex-1 overflow-y-auto p-4">
+          <nav className="flex-1 overflow-y-auto p-2">
             <ul className="space-y-1">
-              {menuItems.map((item) => {
+              {menuItems
+                .filter((item) => !item.adminOnly || user?.role === 'super_admin' || user?.email === MASTER_EMAIL)
+                .map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
 
@@ -250,15 +280,17 @@ export default function DashboardLayout({
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      title={sidebarCollapsed ? item.label : undefined}
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                         isActive
                           ? 'bg-primary-50 text-primary-600'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                        sidebarCollapsed && 'justify-center px-2'
                       )}
                     >
-                      <Icon className="h-5 w-5" />
-                      {item.label}
+                      <Icon className="h-5 w-5 shrink-0" />
+                      {!sidebarCollapsed && item.label}
                     </Link>
                   </li>
                 );
@@ -266,26 +298,59 @@ export default function DashboardLayout({
             </ul>
           </nav>
 
+          {/* Collapse toggle - desktop only */}
+          <div className="hidden lg:block border-t px-2 py-2">
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              title={sidebarCollapsed ? 'Expandir menu' : 'Minimizar menu'}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="h-5 w-5" />
+              ) : (
+                <>
+                  <PanelLeftClose className="h-5 w-5" />
+                  <span>Minimizar</span>
+                </>
+              )}
+            </button>
+          </div>
+
           {/* Usuário */}
-          <div className="border-t p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600">
-                {user?.nome?.charAt(0).toUpperCase() || 'U'}
+          <div className="border-t p-3">
+            {sidebarCollapsed ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 text-sm font-medium">
+                  {user?.nome?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  title="Sair"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
               </div>
-              <div className="flex-1 truncate">
-                <p className="truncate text-sm font-medium text-gray-900">
-                  {user?.nome}
-                </p>
-                <p className="truncate text-xs text-gray-500">{user?.email}</p>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 shrink-0">
+                  {user?.nome?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1 truncate">
+                  <p className="truncate text-sm font-medium text-gray-900">
+                    {user?.nome}
+                  </p>
+                  <p className="truncate text-xs text-gray-500">{user?.email}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  title="Sair"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
               </div>
-              <button
-                onClick={handleLogout}
-                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                title="Sair"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
-            </div>
+            )}
           </div>
         </div>
       </aside>

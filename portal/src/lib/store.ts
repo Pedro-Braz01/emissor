@@ -69,6 +69,8 @@ interface AppState {
   // Sidebar
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   
   // Reset
   reset: () => void;
@@ -86,6 +88,7 @@ const initialState = {
   notifications: [],
   isLoading: false,
   sidebarOpen: true,
+  sidebarCollapsed: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -126,6 +129,7 @@ export const useAppStore = create<AppState>()(
       setIsLoading: (isLoading) => set({ isLoading }),
 
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+      setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
 
       reset: () => set(initialState),
     }),
@@ -134,6 +138,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         empresaSelecionada: state.empresaSelecionada,
         sidebarOpen: state.sidebarOpen,
+        sidebarCollapsed: state.sidebarCollapsed,
       }),
     }
   )
