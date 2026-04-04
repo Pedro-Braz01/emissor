@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useEmpresa } from '@/lib/store';
 import { formatCurrency, formatCpfCnpj, validateCpfCnpj } from '@/lib/utils';
 import { fetchCnpj, fetchCep } from '@/lib/brasil-api';
 import { createClientSupabaseClient } from '@/lib/supabase-client';
 import DashboardLayout from '@/components/layout/dashboard-layout';
+import {
+  CNAES, LC116_ITEMS, NBS_ITEMS,
+  getLc116ByCnae, searchCnae, searchNbs,
+  type CnaeItem, type Lc116Item, type NbsItem,
+} from '@/lib/dados-prefeitura';
 import {
   FileText,
   Send,
@@ -92,6 +97,21 @@ export default function EmitirPage() {
   const [aliquotaIss, setAliquotaIss] = useState('');
   const [discriminacao, setDiscriminacao] = useState('');
   const [informacoesAdicionais, setInformacoesAdicionais] = useState('');
+
+  // ── Dropdowns CNAE / NBS ──
+  const [cnaeSearch, setCnaeSearch] = useState('');
+  const [cnaeDropdownOpen, setCnaeDropdownOpen] = useState(false);
+  const [selectedCnae, setSelectedCnae] = useState<CnaeItem | null>(null);
+  const [filteredCnaes, setFilteredCnaes] = useState<CnaeItem[]>([]);
+  const [lc116Options, setLc116Options] = useState<Lc116Item[]>([]);
+
+  const [nbsSearch, setNbsSearch] = useState('');
+  const [nbsDropdownOpen, setNbsDropdownOpen] = useState(false);
+  const [selectedNbs, setSelectedNbs] = useState<NbsItem | null>(null);
+  const [filteredNbs, setFilteredNbs] = useState<NbsItem[]>([]);
+
+  const cnaeRef = useRef<HTMLDivElement>(null);
+  const nbsRef = useRef<HTMLDivElement>(null);
 
   // ── DESCONTOS ──
   const [descontoCondicionado, setDescontoCondicionado] = useState('0');
@@ -199,6 +219,62 @@ export default function EmitirPage() {
       setTomadorCidade(data.city);
     }
   };
+
+  // ── CNAE dropdown logic ──
+  useEffect(() => {
+    if (cnaeSearch.length >= 1) {
+      setFilteredCnaes(searchCnae(cnaeSearch).slice(0, 20));
+    } else {
+      setFilteredCnaes(CNAES.slice(0, 20));
+    }
+  }, [cnaeSearch]);
+
+  const handleSelectCnae = (item: CnaeItem) => {
+    setSelectedCnae(item);
+    setCnaeInput(item.codigo);
+    setCnaeSearch(`${item.codigo} - ${item.descricao}`);
+    setCnaeDropdownOpen(false);
+    // Auto-fill LC116
+    const lc116Items = getLc116ByCnae(item.codigo);
+    setLc116Options(lc116Items);
+    if (lc116Items.length === 1) {
+      setItemLc116(lc116Items[0].codigo);
+    } else if (lc116Items.length > 1) {
+      setItemLc116('');
+    }
+    // Auto-fill atividade municipal com CNAE
+    setAtividadeMunicipal(item.codigo);
+  };
+
+  // ── NBS dropdown logic ──
+  useEffect(() => {
+    if (nbsSearch.length >= 1) {
+      setFilteredNbs(searchNbs(nbsSearch).slice(0, 20));
+    } else {
+      setFilteredNbs(NBS_ITEMS.slice(0, 20));
+    }
+  }, [nbsSearch]);
+
+  const handleSelectNbs = (item: NbsItem) => {
+    setSelectedNbs(item);
+    setCodigoNbs(item.codigo);
+    setNbsSearch(`${item.codigo} - ${item.descricao}`);
+    setNbsDropdownOpen(false);
+  };
+
+  // ── Click outside to close dropdowns ──
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (cnaeRef.current && !cnaeRef.current.contains(e.target as Node)) {
+        setCnaeDropdownOpen(false);
+      }
+      if (nbsRef.current && !nbsRef.current.contains(e.target as Node)) {
+        setNbsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ── CPF/CNPJ formatação ──
   const handleCpfCnpjChange = (val: string) => {
@@ -475,29 +551,111 @@ export default function EmitirPage() {
           <div className={sectionCls}>
             <h2 className="text-white font-semibold text-sm mb-4">Serviço</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              {/* CNAE - Searchable dropdown */}
+              <div ref={cnaeRef} className="relative">
                 <label className={labelCls}>CNAE</label>
-                <input value={cnaeInput} onChange={e => setCnaeInput(e.target.value)}
-                  placeholder="Ex: 8211300 - Digite o código ou pesquise"
-                  className={inputCls} />
-                <p className="text-xs text-gray-500 mt-1">Conforme cadastro na prefeitura. Editável manualmente.</p>
+                <input
+                  value={cnaeSearch}
+                  onChange={e => {
+                    setCnaeSearch(e.target.value);
+                    setCnaeDropdownOpen(true);
+                    // Allow manual editing
+                    if (!e.target.value) {
+                      setSelectedCnae(null);
+                      setCnaeInput('');
+                      setLc116Options([]);
+                      setAtividadeMunicipal('');
+                    }
+                  }}
+                  onFocus={() => setCnaeDropdownOpen(true)}
+                  placeholder="Digite código ou descrição do CNAE..."
+                  className={inputCls}
+                />
+                {cnaeDropdownOpen && filteredCnaes.length > 0 && (
+                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-600 bg-gray-700 shadow-lg">
+                    {filteredCnaes.map(item => (
+                      <li
+                        key={item.codigo}
+                        onClick={() => handleSelectCnae(item)}
+                        className="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-blue-600 hover:text-white"
+                      >
+                        {item.codigo} - {item.descricao}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Pesquise por código ou descrição. Editável manualmente.</p>
               </div>
+
+              {/* Item LC 116/2003 - Select populated by CNAE */}
               <div>
                 <label className={labelCls}>Item LC 116/2003</label>
-                <input value={itemLc116} onChange={e => setItemLc116(e.target.value)}
-                  placeholder="Ex: 17.01"
-                  className={inputCls} />
+                {lc116Options.length > 0 ? (
+                  <select
+                    value={itemLc116}
+                    onChange={e => setItemLc116(e.target.value)}
+                    className={selectCls}
+                  >
+                    <option value="">Selecione...</option>
+                    {lc116Options.map(item => (
+                      <option key={item.codigo} value={item.codigo}>
+                        {item.codigo} - {item.descricao}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    value={itemLc116}
+                    onChange={e => setItemLc116(e.target.value)}
+                    placeholder="Ex: 17.01 (selecione CNAE para preencher)"
+                    className={inputCls}
+                  />
+                )}
                 <p className="text-xs text-gray-500 mt-1">Correlação automática pelo CNAE ou editar manualmente.</p>
               </div>
+
+              {/* Atividade Município - Auto-filled from CNAE */}
               <div>
                 <label className={labelCls}>Atividade Município</label>
-                <input value={atividadeMunicipal} onChange={e => setAtividadeMunicipal(e.target.value)}
-                  placeholder="Código da atividade municipal" className={inputCls} />
+                <input
+                  value={atividadeMunicipal}
+                  onChange={e => setAtividadeMunicipal(e.target.value)}
+                  placeholder="Preenchido automaticamente pelo CNAE"
+                  className={inputCls}
+                />
               </div>
-              <div>
+
+              {/* Código NBS - Searchable dropdown */}
+              <div ref={nbsRef} className="relative">
                 <label className={labelCls}>Código NBS</label>
-                <input value={codigoNbs} onChange={e => setCodigoNbs(e.target.value)}
-                  placeholder="Selecione ou digite" className={inputCls} />
+                <input
+                  value={nbsSearch}
+                  onChange={e => {
+                    setNbsSearch(e.target.value);
+                    setNbsDropdownOpen(true);
+                    if (!e.target.value) {
+                      setSelectedNbs(null);
+                      setCodigoNbs('');
+                    }
+                  }}
+                  onFocus={() => setNbsDropdownOpen(true)}
+                  placeholder="Digite código ou descrição NBS..."
+                  className={inputCls}
+                />
+                {nbsDropdownOpen && filteredNbs.length > 0 && (
+                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-600 bg-gray-700 shadow-lg">
+                    {filteredNbs.map(item => (
+                      <li
+                        key={item.codigo}
+                        onClick={() => handleSelectNbs(item)}
+                        className="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-blue-600 hover:text-white"
+                      >
+                        {item.codigo} - {item.descricao}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Pesquise por código ou descrição.</p>
               </div>
 
               <div>

@@ -20,6 +20,7 @@ export default function LoginPage() {
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (authError) {
+      console.error('[Login] Auth error:', authError.message, authError.status);
       setError('E-mail ou senha inválidos.');
       setLoading(false);
       return;
@@ -104,7 +105,7 @@ export default function LoginPage() {
             Esqueceu sua senha?
           </a>
           <p className="text-gray-600 text-xs">
-            Ainda n\u00e3o tem conta?{' '}
+            Ainda não tem conta?{' '}
             <a href="/cadastro" className="text-blue-400 hover:text-blue-300 transition-colors">
               Cadastre sua empresa
             </a>

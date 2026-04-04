@@ -7,7 +7,9 @@
       "Bash(curl -s -X POST \"https://pkerdadfsbcimvsyljyu.supabase.co/auth/v1/admin/users\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZXJkYWRmc2JjaW12c3lsanl1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTAwNDg3MSwiZXhwIjoyMDkwNTgwODcxfQ.QJKhFAPW74vZuHdFbFwVFgbPNsww0rGH08PhmZXKDI4\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZXJkYWRmc2JjaW12c3lsanl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDQ4NzEsImV4cCI6MjA5MDU4MDg3MX0.qzBSZpuH-3BnBMwtEMcvSvqG__BJI7_z2-uHtafmPnc\" -H \"Content-Type: application/json\" -d '{:*)",
       "Bash(npx tsc:*)",
       "Bash(pip install:*)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(find C:UsersPedroemissorportal -type f \\\\\\(-name page.tsx -o -name ConfiguracoesTributariasClient.tsx -o -name .env* -o -name middleware.ts -o -name route.ts \\\\\\))",
+      "Bash(npm run:*)"
     ]
   }
 }

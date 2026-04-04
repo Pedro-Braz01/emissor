@@ -16,10 +16,34 @@ export function createServerSupabaseClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value, ...options }); } catch {}
+          try {
+            cookieStore.set({
+              name,
+              value,
+              ...options,
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+              path: '/',
+            });
+          } catch {
+            // set() throws in Server Components (read-only context) — safe to ignore.
+            // Cookies will be refreshed on the next middleware pass.
+          }
         },
         remove(name: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value: '', ...options }); } catch {}
+          try {
+            cookieStore.set({
+              name,
+              value: '',
+              ...options,
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+              path: '/',
+              maxAge: 0,
+            });
+          } catch {
+            // Same as above — safe to ignore in read-only contexts.
+          }
         },
       },
     }
