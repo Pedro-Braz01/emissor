@@ -126,6 +126,13 @@ export async function POST(request: Request) {
         codigoCnae: body.servico.codigoCnae,
         issRetido: body.servico.issRetido,
       },
+      retencoes: body.retencoes ? {
+        pis: body.retencoes.pis,
+        cofins: body.retencoes.cofins,
+        inss: body.retencoes.inss,
+        irrf: body.retencoes.irrf,
+        csll: body.retencoes.csll,
+      } : undefined,
     },
     user.id,
     user.email || 'Usuário',

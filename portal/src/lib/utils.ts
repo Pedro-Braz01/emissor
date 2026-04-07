@@ -139,13 +139,13 @@ export function validateCpfCnpj(value: string): boolean {
 // ===================
 
 export const statusColors: Record<string, { bg: string; text: string }> = {
-  RASCUNHO: { bg: 'bg-gray-100', text: 'text-gray-700' },
-  AGUARDANDO: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-  PROCESSANDO: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  EMITIDA: { bg: 'bg-green-100', text: 'text-green-700' },
-  REJEITADA: { bg: 'bg-red-100', text: 'text-red-700' },
-  CANCELADA: { bg: 'bg-gray-100', text: 'text-gray-700' },
-  SUBSTITUIDA: { bg: 'bg-orange-100', text: 'text-orange-700' },
+  // DB lowercase values (schema.sql)
+  pendente: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+  emitida: { bg: 'bg-green-100', text: 'text-green-700' },
+  cancelada: { bg: 'bg-gray-100', text: 'text-gray-700' },
+  substituida: { bg: 'bg-orange-100', text: 'text-orange-700' },
+  erro: { bg: 'bg-red-100', text: 'text-red-700' },
+  // Licenças (uppercase)
   ATIVO: { bg: 'bg-green-100', text: 'text-green-700' },
   BLOQUEADO: { bg: 'bg-red-100', text: 'text-red-700' },
   TRIAL: { bg: 'bg-blue-100', text: 'text-blue-700' },
@@ -153,13 +153,13 @@ export const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 export const statusLabels: Record<string, string> = {
-  RASCUNHO: 'Rascunho',
-  AGUARDANDO: 'Aguardando',
-  PROCESSANDO: 'Processando',
-  EMITIDA: 'Emitida',
-  REJEITADA: 'Rejeitada',
-  CANCELADA: 'Cancelada',
-  SUBSTITUIDA: 'Substituída',
+  // DB lowercase values (schema.sql)
+  pendente: 'Pendente',
+  emitida: 'Emitida',
+  cancelada: 'Cancelada',
+  substituida: 'Substituída',
+  erro: 'Erro',
+  // Licenças (uppercase)
   ATIVO: 'Ativo',
   BLOQUEADO: 'Bloqueado',
   TRIAL: 'Trial',

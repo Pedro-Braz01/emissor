@@ -10,7 +10,19 @@
       "Bash(python -c \":*)",
       "Bash(find C:UsersPedroemissorportal -type f \\\\\\(-name page.tsx -o -name ConfiguracoesTributariasClient.tsx -o -name .env* -o -name middleware.ts -o -name route.ts \\\\\\))",
       "Bash(npm run:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(ls -lhR \"C:\\\\Users\\\\Pedro\\\\emissor\\\\arq prefeitura\\\\RP - Integração NFS-e ABRASF 204 2>/dev/null || find C:UsersPedroemissorarq\" prefeituraRP - Integração NFS-e ABRASF 204 -type f)",
+      "Bash(find /c/Users/Pedro/emissor -name schema* -o -name *schema*)",
+      "Bash(pdftotext \"/c/Users/Pedro/emissor/arq prefeitura/RP - Integração NFS-e ABRASF 204/Manual de Orientação ao Contribuinte - Versão 2.04/ABRASF_NFS-e_Manual_de_Orientacao_do_Contribuinte_2.04.pdf\" -)",
+      "Bash(pdftotext '/c/Users/Pedro/emissor/arq prefeitura/RP - Integração NFS-e ABRASF 204/Manual_integracao_v101.pdf' -)",
+      "Bash(pdftotext '/c/Users/Pedro/emissor/arq prefeitura/RP - Integração NFS-e ABRASF 204/Manual de Orientação ao Contribuinte - Versão 2.04/ABRASF_NFS-e_Manual_de_Orientacao_do_Contribuinte_2.04.pdf' -)",
+      "Bash(find /c/Users/Pedro/emissor -name *.sql -type f)",
+      "Bash(find /c/Users/Pedro/emissor/portal/src -name *theme* -o -name *context* -o -name *provider*)",
+      "Bash(xargs wc:*)",
+      "Bash(ls -la /c/Users/Pedro/emissor/portal/src/app/api/*/route.ts)",
+      "Bash(xargs grep:*)",
+      "Bash(ls -la /c/Users/Pedro/emissor/portal/src/app/api/*/)",
+      "Bash(grep -r \"tomador_id\\\\|certificados\" /c/Users/Pedro/emissor/database --include=*.sql)"
     ]
   }
 }

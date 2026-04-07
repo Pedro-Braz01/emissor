@@ -218,27 +218,39 @@ export class SoapClient {
    */
   private extractNfseData(nfseXml: string): Record<string, any> | null {
     try {
-      const extract = (tag: string): string | null => {
-        const match = nfseXml.match(new RegExp(`<${tag}>(.*?)<\/${tag}>`, 'i'));
+      const extract = (tag: string, context?: string): string | null => {
+        const xml = context || nfseXml;
+        const match = xml.match(new RegExp(`<${tag}>(.*?)<\/${tag}>`, 'i'));
         return match ? match[1] : null;
       };
 
+      // Extrai bloco InfNfse para pegar Numero da NFSe (não do RPS)
+      const infNfseMatch = nfseXml.match(/<InfNfse[\s\S]*?>([\s\S]*?)<\/InfNfse>/i);
+      const infNfse = infNfseMatch ? infNfseMatch[1] : nfseXml;
+
+      // Numero da NFS-e fica direto dentro de InfNfse, não dentro de IdentificacaoRps
+      const numeroNfse = extract('Numero', infNfse);
+      const codigoVerificacao = extract('CodigoVerificacao', infNfse);
+      const dataEmissao = extract('DataEmissao', infNfse);
+
+      // Extrai bloco Valores
+      const valoresMatch = nfseXml.match(/<Valores>([\s\S]*?)<\/Valores>/i);
+      const valores = valoresMatch ? valoresMatch[1] : '';
+
+      // Extrai link/URL da NFSe se disponível
+      const linkNfse = extract('LinkNfse') || extract('Link') || extract('OutrasInformacoes');
+
       return {
-        numeroNfse: extract('Numero'),
-        codigoVerificacao: extract('CodigoVerificacao'),
-        dataEmissao: extract('DataEmissao'),
-        valorServicos: extract('ValorServicos'),
-        valorIss: extract('ValorIss'),
-        baseCalculo: extract('BaseCalculo'),
-        aliquota: extract('Aliquota'),
-        prestador: {
-          cnpj: extract('Cnpj'),
-          inscricaoMunicipal: extract('InscricaoMunicipal'),
-          razaoSocial: extract('RazaoSocial'),
-        },
-        tomador: {
-          razaoSocial: nfseXml.match(/<TomadorServico>[\s\S]*?<RazaoSocial>(.*?)<\/RazaoSocial>/i)?.[1],
-        },
+        numeroNfse,
+        codigoVerificacao,
+        dataEmissao,
+        linkNfse,
+        valorServicos: extract('ValorServicos', valores),
+        valorIss: extract('ValorIss', valores),
+        baseCalculo: extract('BaseCalculo', valores),
+        aliquota: extract('Aliquota', valores),
+        // XML completo da NFS-e retornada (para geração do PDF)
+        xmlNfseCompleto: nfseXml,
       };
     } catch {
       return null;

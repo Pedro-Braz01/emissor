@@ -57,6 +57,7 @@ export interface Servico {
   itemListaServico: string;
   codigoCnae?: string;
   codigoTributacaoMunicipio?: string;
+  codigoNbs?: string;
   discriminacao: string;
   codigoMunicipio?: string;
   exigibilidadeIss?: number;
@@ -127,6 +128,38 @@ export class XmlBuilder {
     const baseCalculo = servico.valorServicos - (servico.valorDeducoes || 0) - (servico.descontoIncondicionado || 0);
     const valorIss = servico.valorIss || baseCalculo * servico.aliquota;
 
+    // Helper: só inclui tag se valor > 0 (ABRASF 2.04: omitir tags opcionais com valor zero)
+    const optTag = (tag: string, value: number | undefined, decimals = 2): string => {
+      if (!value || value <= 0) return '';
+      return `<${tag}>${formatDecimal(value, decimals)}</${tag}>`;
+    };
+
+    // ValTotTributos: soma de todos os tributos (ABRASF 2.04)
+    const valTotTributos = (servico.valorPis || 0) + (servico.valorCofins || 0) +
+      (servico.valorInss || 0) + (servico.valorIr || 0) + (servico.valorCsll || 0) +
+      (servico.outrasRetencoes || 0) + valorIss;
+
+    // Monta bloco <Valores> - ValorServicos é obrigatório, demais são opcionais
+    const valoresXml = [
+      `<ValorServicos>${formatDecimal(servico.valorServicos)}</ValorServicos>`,
+      optTag('ValorDeducoes', servico.valorDeducoes),
+      optTag('ValorPis', servico.valorPis),
+      optTag('ValorCofins', servico.valorCofins),
+      optTag('ValorInss', servico.valorInss),
+      optTag('ValorIr', servico.valorIr),
+      optTag('ValorCsll', servico.valorCsll),
+      optTag('OutrasRetencoes', servico.outrasRetencoes),
+      optTag('ValTotTributos', valTotTributos),
+      `<ValorIss>${formatDecimal(valorIss)}</ValorIss>`,
+      `<Aliquota>${formatDecimal(servico.aliquota, 4)}</Aliquota>`,
+      optTag('DescontoIncondicionado', servico.descontoIncondicionado),
+      optTag('DescontoCondicionado', servico.descontoCondicionado),
+    ].filter(Boolean).join('\n          ');
+
+    // MunicipioIncidencia: obrigatório quando ExigibilidadeISS é 1, 3, 5, 6 ou 7
+    const exigibilidade = servico.exigibilidadeIss || 1;
+    const precisaMunicipioIncidencia = [1, 3, 5, 6, 7].includes(exigibilidade);
+
     return `<GerarNfseEnvio xmlns="${ns}">
   <Rps>
     <InfDeclaracaoPrestacaoServico Id="rps${rps.numero}">
@@ -142,28 +175,18 @@ export class XmlBuilder {
       <Competencia>${formatDate(competencia)}</Competencia>
       <Servico>
         <Valores>
-          <ValorServicos>${formatDecimal(servico.valorServicos)}</ValorServicos>
-          <ValorDeducoes>${formatDecimal(servico.valorDeducoes)}</ValorDeducoes>
-          <ValorPis>${formatDecimal(servico.valorPis)}</ValorPis>
-          <ValorCofins>${formatDecimal(servico.valorCofins)}</ValorCofins>
-          <ValorInss>${formatDecimal(servico.valorInss)}</ValorInss>
-          <ValorIr>${formatDecimal(servico.valorIr)}</ValorIr>
-          <ValorCsll>${formatDecimal(servico.valorCsll)}</ValorCsll>
-          <OutrasRetencoes>${formatDecimal(servico.outrasRetencoes)}</OutrasRetencoes>
-          <ValorIss>${formatDecimal(valorIss)}</ValorIss>
-          <Aliquota>${formatDecimal(servico.aliquota, 4)}</Aliquota>
-          <DescontoIncondicionado>${formatDecimal(servico.descontoIncondicionado)}</DescontoIncondicionado>
-          <DescontoCondicionado>${formatDecimal(servico.descontoCondicionado)}</DescontoCondicionado>
+          ${valoresXml}
         </Valores>
         <IssRetido>${servico.issRetido ? 1 : 2}</IssRetido>
         ${servico.issRetido && servico.responsavelRetencao ? `<ResponsavelRetencao>${servico.responsavelRetencao}</ResponsavelRetencao>` : ''}
         <ItemListaServico>${escapeXml(servico.itemListaServico)}</ItemListaServico>
         ${servico.codigoCnae ? `<CodigoCnae>${servico.codigoCnae}</CodigoCnae>` : ''}
         ${servico.codigoTributacaoMunicipio ? `<CodigoTributacaoMunicipio>${servico.codigoTributacaoMunicipio}</CodigoTributacaoMunicipio>` : ''}
+        ${servico.codigoNbs ? `<CodigoNbs>${servico.codigoNbs}</CodigoNbs>` : ''}
         <Discriminacao>${escapeXml(servico.discriminacao)}</Discriminacao>
         <CodigoMunicipio>${servico.codigoMunicipio || CODIGO_MUNICIPIO}</CodigoMunicipio>
-        <ExigibilidadeISS>${servico.exigibilidadeIss || 1}</ExigibilidadeISS>
-        <MunicipioIncidencia>${servico.municipioIncidencia || CODIGO_MUNICIPIO}</MunicipioIncidencia>
+        <ExigibilidadeISS>${exigibilidade}</ExigibilidadeISS>
+        ${precisaMunicipioIncidencia ? `<MunicipioIncidencia>${servico.municipioIncidencia || CODIGO_MUNICIPIO}</MunicipioIncidencia>` : ''}
       </Servico>
       <Prestador>
         <CpfCnpj>
@@ -174,7 +197,7 @@ export class XmlBuilder {
       <TomadorServico>
         ${this.buildTomadorXml(tomador)}
       </TomadorServico>
-      <RegimeEspecialTributacao>${dados.regimeEspecialTributacao || 6}</RegimeEspecialTributacao>
+      ${dados.regimeEspecialTributacao ? `<RegimeEspecialTributacao>${dados.regimeEspecialTributacao}</RegimeEspecialTributacao>` : ''}
       <OptanteSimplesNacional>${dados.optanteSimplesNacional ? 1 : 2}</OptanteSimplesNacional>
       <IncentivoFiscal>${dados.incentivoFiscal ? 1 : 2}</IncentivoFiscal>
       ${dados.informacoesComplementares ? `<InformacoesComplementares>${escapeXml(dados.informacoesComplementares)}</InformacoesComplementares>` : ''}

@@ -34,11 +34,12 @@ interface Nota {
   data_emissao: string;
   created_at: string;
   codigo_verificacao: string | null;
-  link_nfse: string | null;
-  tomadores: {
-    cpf_cnpj: string;
-    razao_social: string;
-  } | null;
+  pdf_url: string | null;
+  xml_enviado: string | null;
+  xml_retorno: string | null;
+  tomador_razao_social: string;
+  tomador_cnpj_cpf: string;
+  empresa_id: string;
 }
 
 export default function NotasPage() {
@@ -73,6 +74,7 @@ export default function NotasPage() {
         .from('notas_fiscais')
         .select(`
           id,
+          empresa_id,
           numero_nfse,
           numero_rps,
           serie_rps,
@@ -83,11 +85,11 @@ export default function NotasPage() {
           data_emissao,
           created_at,
           codigo_verificacao,
-          link_nfse,
-          tomadores (
-            cpf_cnpj,
-            razao_social
-          )
+          pdf_url,
+          xml_enviado,
+          xml_retorno,
+          tomador_razao_social,
+          tomador_cnpj_cpf
         `, { count: 'exact' })
         .eq('empresa_id', empresa!.id)
         .order('created_at', { ascending: false });
@@ -130,10 +132,39 @@ export default function NotasPage() {
     return (
       nota.numero_nfse?.toString().includes(busca) ||
       nota.numero_rps.toString().includes(busca) ||
-      nota.tomadores?.razao_social.toLowerCase().includes(busca) ||
-      nota.tomadores?.cpf_cnpj.includes(busca)
+      nota.tomador_razao_social?.toLowerCase().includes(busca) ||
+      nota.tomador_cnpj_cpf?.includes(busca)
     );
   });
+
+  // Handlers para cancelar e download
+  const handleCancelar = async (nota: Nota) => {
+    if (!confirm(`Deseja cancelar a NFSe ${nota.numero_nfse}?`)) return;
+    try {
+      const res = await fetch('/api/nfse/cancelar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          empresaId: nota.empresa_id,
+          numeroNfse: nota.numero_nfse,
+          codigoCancelamento: '1',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('NFSe cancelada com sucesso!');
+        loadNotas();
+      } else {
+        alert(`Erro ao cancelar: ${data.error}`);
+      }
+    } catch {
+      alert('Erro de conexão ao cancelar');
+    }
+  };
+
+  const handleDownloadXml = (nota: Nota, tipo: 'xml_enviado' | 'xml_retorno') => {
+    window.open(`/api/nfse/download?notaId=${nota.id}&tipo=${tipo}`, '_blank');
+  };
 
   const exportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
@@ -148,8 +179,8 @@ export default function NotasPage() {
     const rows = notasFiltradas.map(n => [
       n.numero_nfse ? `NFSe ${n.numero_nfse}` : `RPS ${n.numero_rps}`,
       formatDate(n.data_emissao),
-      n.tomadores?.razao_social || '-',
-      n.tomadores?.cpf_cnpj ? formatCpfCnpj(n.tomadores.cpf_cnpj) : '-',
+      n.tomador_razao_social || '-',
+      n.tomador_cnpj_cpf ? formatCpfCnpj(n.tomador_cnpj_cpf) : '-',
       formatCurrency(Number(n.valor_servicos)),
       formatCurrency(Number(n.valor_iss)),
       statusLabels[n.status] || n.status,
@@ -168,12 +199,12 @@ export default function NotasPage() {
 
   const exportXLS = () => {
     const data = notasFiltradas.map(n => ({
-      'Número NFSe': n.numero_nfse || '',
+      'Numero NFSe': n.numero_nfse || '',
       'RPS': `${n.numero_rps}/${n.serie_rps}`,
-      'Data Emissão': formatDate(n.data_emissao),
-      'Tomador': n.tomadores?.razao_social || '',
-      'CPF/CNPJ': n.tomadores?.cpf_cnpj ? formatCpfCnpj(n.tomadores.cpf_cnpj) : '',
-      'Valor Serviços': Number(n.valor_servicos),
+      'Data Emissao': formatDate(n.data_emissao),
+      'Tomador': n.tomador_razao_social || '',
+      'CPF/CNPJ': n.tomador_cnpj_cpf ? formatCpfCnpj(n.tomador_cnpj_cpf) : '',
+      'Valor Servicos': Number(n.valor_servicos),
       'ISS': Number(n.valor_iss),
       'Status': statusLabels[n.status] || n.status,
     }));
@@ -200,8 +231,8 @@ export default function NotasPage() {
       const valorServicos = Number(nota.valor_servicos).toFixed(2);
       const valorIss = Number(nota.valor_iss).toFixed(2);
       const prestadorRazao = escapeXml(empresa?.razaoSocial || '');
-      const tomadorRazao = escapeXml(nota.tomadores?.razao_social || '');
-      const tomadorCpfCnpj = escapeXml(nota.tomadores?.cpf_cnpj || '');
+      const tomadorRazao = escapeXml(nota.tomador_razao_social || '');
+      const tomadorCpfCnpj = escapeXml(nota.tomador_cnpj_cpf || '');
       const discriminacao = escapeXml(nota.discriminacao || '');
 
       return `  <CompNfse>
@@ -301,10 +332,10 @@ export default function NotasPage() {
                 }}
               >
                 <option value="">Todos os status</option>
-                <option value="EMITIDA">Emitida</option>
-                <option value="CANCELADA">Cancelada</option>
-                <option value="REJEITADA">Rejeitada</option>
-                <option value="PROCESSANDO">Processando</option>
+                <option value="emitida">Emitida</option>
+                <option value="cancelada">Cancelada</option>
+                <option value="erro">Erro</option>
+                <option value="pendente">Pendente</option>
               </select>
             </div>
 
@@ -379,11 +410,11 @@ export default function NotasPage() {
                           <td className="px-4 py-3">
                             <div>
                               <p className="font-medium text-gray-900">
-                                {nota.tomadores?.razao_social || '-'}
+                                {nota.tomador_razao_social || '-'}
                               </p>
                               <p className="text-sm text-gray-500">
-                                {nota.tomadores?.cpf_cnpj
-                                  ? formatCpfCnpj(nota.tomadores.cpf_cnpj)
+                                {nota.tomador_cnpj_cpf
+                                  ? formatCpfCnpj(nota.tomador_cnpj_cpf)
                                   : '-'}
                               </p>
                             </div>
@@ -408,7 +439,7 @@ export default function NotasPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => setNotaSelecionada(nota)}
                                 className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
@@ -416,10 +447,29 @@ export default function NotasPage() {
                               >
                                 <Eye className="h-4 w-4" />
                               </button>
-                              {nota.status === 'EMITIDA' && (
+                              {nota.xml_enviado && (
                                 <button
+                                  onClick={() => handleDownloadXml(nota, 'xml_enviado')}
+                                  className="rounded-lg p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
+                                  title="Baixar XML enviado"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </button>
+                              )}
+                              {nota.xml_retorno && (
+                                <button
+                                  onClick={() => handleDownloadXml(nota, 'xml_retorno')}
+                                  className="rounded-lg p-2 text-gray-400 hover:bg-green-50 hover:text-green-600"
+                                  title="Baixar XML retorno"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </button>
+                              )}
+                              {nota.status === 'emitida' && nota.numero_nfse && (
+                                <button
+                                  onClick={() => handleCancelar(nota)}
                                   className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                                  title="Cancelar"
+                                  title="Cancelar NFSe"
                                 >
                                   <XCircle className="h-4 w-4" />
                                 </button>
@@ -485,27 +535,27 @@ export default function NotasPage() {
               <div className="space-y-4 p-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <p className="text-sm text-gray-500">Número NFSe</p>
+                    <p className="text-sm text-gray-500">Numero NFSe</p>
                     <p className="font-medium">{notaSelecionada.numero_nfse || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Código Verificação</p>
+                    <p className="text-sm text-gray-500">Codigo Verificacao</p>
                     <p className="font-medium">{notaSelecionada.codigo_verificacao || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Tomador</p>
-                    <p className="font-medium">{notaSelecionada.tomadores?.razao_social || '-'}</p>
+                    <p className="font-medium">{notaSelecionada.tomador_razao_social || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">CPF/CNPJ</p>
                     <p className="font-medium">
-                      {notaSelecionada.tomadores?.cpf_cnpj
-                        ? formatCpfCnpj(notaSelecionada.tomadores.cpf_cnpj)
+                      {notaSelecionada.tomador_cnpj_cpf
+                        ? formatCpfCnpj(notaSelecionada.tomador_cnpj_cpf)
                         : '-'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Valor Serviços</p>
+                    <p className="text-sm text-gray-500">Valor Servicos</p>
                     <p className="font-medium">{formatCurrency(Number(notaSelecionada.valor_servicos))}</p>
                   </div>
                   <div>
@@ -513,20 +563,41 @@ export default function NotasPage() {
                     <p className="font-medium">{formatCurrency(Number(notaSelecionada.valor_iss))}</p>
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-sm text-gray-500">Discriminação</p>
+                    <p className="text-sm text-gray-500">Discriminacao</p>
                     <p className="whitespace-pre-wrap text-sm">{notaSelecionada.discriminacao}</p>
                   </div>
                 </div>
-                {notaSelecionada.link_nfse && (
-                  <a
-                    href={notaSelecionada.link_nfse}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary w-full"
-                  >
-                    Ver NFSe na Prefeitura
-                  </a>
-                )}
+                <div className="flex gap-2">
+                  {notaSelecionada.xml_enviado && (
+                    <button
+                      onClick={() => handleDownloadXml(notaSelecionada, 'xml_enviado')}
+                      className="btn btn-outline flex-1 flex items-center justify-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      XML Enviado
+                    </button>
+                  )}
+                  {notaSelecionada.xml_retorno && (
+                    <button
+                      onClick={() => handleDownloadXml(notaSelecionada, 'xml_retorno')}
+                      className="btn btn-outline flex-1 flex items-center justify-center gap-2"
+                    >
+                      <FileText className="h-4 w-4" />
+                      XML Retorno
+                    </button>
+                  )}
+                  {notaSelecionada.pdf_url && (
+                    <a
+                      href={notaSelecionada.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      PDF NFSe
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>

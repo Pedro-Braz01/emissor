@@ -1,0 +1,5 @@
+WebService de Produção: https://nfse.issnetonline.com.br/abrasf204/ribeiraopreto/nfse.asmx
+Série RPS:  1
+
+Webservice Homologação (Fictício): https://www.issnetonline.com.br/homologaabrasf/webservicenfse204/nfse.asmx
+Série RPS: 8 

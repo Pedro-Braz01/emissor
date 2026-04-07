@@ -45,6 +45,11 @@ const menuItems = [
     icon: FileText,
   },
   {
+    label: 'Emissao em Lote',
+    href: '/emissao-lote',
+    icon: Upload,
+  },
+  {
     label: 'Consultar Notas',
     href: '/notas',
     icon: Search,

@@ -39,6 +39,13 @@ export interface EmissaoInput {
     issRetido?: boolean;
     aliquota?: number;
   };
+  retencoes?: {
+    pis?: number;
+    cofins?: number;
+    inss?: number;
+    irrf?: number;
+    csll?: number;
+  };
   competencia?: string;
 }
 
@@ -165,10 +172,18 @@ export class NfseService {
       const aliquotaIss = input.servico.aliquota || Number(empresa.aliquota_iss) || 0.05;
       const valorServicos = input.servico.valorServicos;
       const valorIss = valorServicos * aliquotaIss;
+      const retPis = input.retencoes?.pis || 0;
+      const retCofins = input.retencoes?.cofins || 0;
+      const retInss = input.retencoes?.inss || 0;
+      const retIrrf = input.retencoes?.irrf || 0;
+      const retCsll = input.retencoes?.csll || 0;
+      const totalRetencoes = retPis + retCofins + retInss + retIrrf + retCsll +
+        (input.servico.issRetido ? valorIss : 0);
+      const valorLiquido = valorServicos - totalRetencoes;
 
-      // 6. Cria registro da nota (status PROCESSANDO)
+      // 6. Cria registro da nota (status processando)
       const competencia = input.competencia || new Date().toISOString().split('T')[0];
-      
+
       const { data: nota, error: notaError } = await this.supabase
         .from('notas_fiscais')
         .insert({
@@ -176,22 +191,27 @@ export class NfseService {
           tomador_id: tomadorId,
           numero_rps: numeroRps,
           serie_rps: serieRps,
-          tipo_rps: 1,
+          tipo_rps: 'RPS',
           data_emissao: new Date().toISOString().split('T')[0],
           competencia,
-          status: 'PROCESSANDO',
+          status: 'pendente',
           valor_servicos: valorServicos,
           valor_iss: valorIss,
           aliquota_iss: aliquotaIss,
+          valor_pis: retPis,
+          valor_cofins: retCofins,
+          valor_inss: retInss,
+          valor_irrf: retIrrf,
+          valor_csll: retCsll,
+          valor_liquido: valorLiquido,
           iss_retido: input.servico.issRetido || false,
           item_lista_servico: input.servico.itemListaServico || empresa.item_lista_servico,
           codigo_cnae: input.servico.codigoCnae || empresa.codigo_cnae,
           discriminacao: input.servico.discriminacao,
           municipio_prestacao: '3543402',
           municipio_incidencia: '3543402',
-          exigibilidade_iss: 1,
+          exigibilidade_iss: 'exigivel',
           created_by: userId,
-          created_by_nome: userNome,
           created_by_ip: userIp,
         })
         .select('id')
@@ -216,6 +236,11 @@ export class NfseService {
         servico: {
           valorServicos,
           valorIss,
+          valorPis: retPis,
+          valorCofins: retCofins,
+          valorInss: retInss,
+          valorIr: retIrrf,
+          valorCsll: retCsll,
           aliquota: aliquotaIss,
           issRetido: input.servico.issRetido || false,
           itemListaServico: input.servico.itemListaServico || empresa.item_lista_servico || '01.07',
@@ -263,15 +288,14 @@ export class NfseService {
       // 11. Atualiza nota com resultado
       if (soapResponse.success && soapResponse.data) {
         const nfseData = soapResponse.data;
-        
+
         await this.supabase
           .from('notas_fiscais')
           .update({
-            status: 'EMITIDA',
-            numero_nfse: parseInt(nfseData.numeroNfse),
+            status: 'emitida',
+            numero_nfse: nfseData.numeroNfse,
             codigo_verificacao: nfseData.codigoVerificacao,
-            emitida_em: new Date().toISOString(),
-            xml_envio: xmlAssinado,
+            xml_enviado: xmlAssinado,
             xml_retorno: soapResponse.xml,
           })
           .eq('id', notaId);
@@ -293,13 +317,14 @@ export class NfseService {
       } else {
         // Falha na emissão
         const errorMsg = soapResponse.errors?.map(e => e.mensagem).join('; ') || 'Erro desconhecido';
-        
+
         await this.supabase
           .from('notas_fiscais')
           .update({
-            status: 'REJEITADA',
-            xml_envio: xmlAssinado,
+            status: 'erro',
+            xml_enviado: xmlAssinado,
             xml_retorno: soapResponse.xml,
+            mensagem_erro: errorMsg,
           })
           .eq('id', notaId);
 
@@ -332,7 +357,7 @@ export class NfseService {
       const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
       
       if (notaId) {
-        await this.updateNotaStatus(notaId, 'REJEITADA', errorMsg);
+        await this.updateNotaStatus(notaId, 'erro', errorMsg);
         await this.registrarEvento(notaId, 'ERRO', false, 'E999', errorMsg, undefined, undefined, userId, userIp);
       }
 
@@ -364,7 +389,7 @@ export class NfseService {
         `)
         .eq('empresa_id', input.empresaId)
         .eq('numero_nfse', input.numeroNfse)
-        .eq('status', 'EMITIDA')
+        .eq('status', 'emitida')
         .single();
 
       if (notaError || !nota) {
@@ -405,9 +430,8 @@ export class NfseService {
         await this.supabase
           .from('notas_fiscais')
           .update({
-            status: 'CANCELADA',
-            motivo_cancelamento: input.motivo,
-            cancelada_em: new Date().toISOString(),
+            status: 'cancelada',
+            mensagem_erro: input.motivo ? `Cancelamento: ${input.motivo}` : null,
           })
           .eq('id', nota.id);
 
@@ -490,10 +514,9 @@ export class NfseService {
   private async updateNotaStatus(notaId: string, status: string, motivo?: string) {
     await this.supabase
       .from('notas_fiscais')
-      .update({ 
-        status, 
-        motivo_cancelamento: motivo,
-        updated_at: new Date().toISOString(),
+      .update({
+        status,
+        mensagem_erro: motivo,
       })
       .eq('id', notaId);
   }

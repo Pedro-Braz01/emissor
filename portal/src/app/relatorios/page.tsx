@@ -33,18 +33,15 @@ interface NotaFiscal {
   valor_iss: number;
   data_emissao: string;
   created_at: string;
-  user_id: string;
-  ret_pis: number | null;
-  ret_cofins: number | null;
-  ret_inss: number | null;
-  ret_irrf: number | null;
-  ret_csll: number | null;
-  outras_retencoes: number | null;
+  created_by: string;
+  valor_pis: number | null;
+  valor_cofins: number | null;
+  valor_inss: number | null;
+  valor_irrf: number | null;
+  valor_csll: number | null;
   iss_retido: boolean | null;
-  tomadores: {
-    cpf_cnpj: string;
-    razao_social: string;
-  } | null;
+  tomador_razao_social: string;
+  tomador_cnpj_cpf: string;
 }
 
 interface UserMap {
@@ -52,14 +49,13 @@ interface UserMap {
 }
 
 function getRetencoes(nota: NotaFiscal): number {
-  const pis = Number(nota.ret_pis) || 0;
-  const cofins = Number(nota.ret_cofins) || 0;
-  const inss = Number(nota.ret_inss) || 0;
-  const irrf = Number(nota.ret_irrf) || 0;
-  const csll = Number(nota.ret_csll) || 0;
-  const outras = Number(nota.outras_retencoes) || 0;
+  const pis = Number(nota.valor_pis) || 0;
+  const cofins = Number(nota.valor_cofins) || 0;
+  const inss = Number(nota.valor_inss) || 0;
+  const irrf = Number(nota.valor_irrf) || 0;
+  const csll = Number(nota.valor_csll) || 0;
   const issRetido = nota.iss_retido ? (Number(nota.valor_iss) || 0) : 0;
-  return pis + cofins + inss + irrf + csll + outras + issRetido;
+  return pis + cofins + inss + irrf + csll + issRetido;
 }
 
 function getValorLiquido(nota: NotaFiscal): number {
@@ -121,20 +117,18 @@ export default function RelatoriosPage() {
           valor_iss,
           data_emissao,
           created_at,
-          user_id,
-          ret_pis,
-          ret_cofins,
-          ret_inss,
-          ret_irrf,
-          ret_csll,
-          outras_retencoes,
+          created_by,
+          valor_pis,
+          valor_cofins,
+          valor_inss,
+          valor_irrf,
+          valor_csll,
           iss_retido,
-          tomadores (
-            cpf_cnpj,
-            razao_social
-          )
+          tomador_razao_social,
+          tomador_cnpj_cpf
         `)
         .eq('empresa_id', empresa.id)
+        .in('status', ['emitida', 'cancelada'])
         .order('data_emissao', { ascending: true });
 
       if (dataInicio) {
@@ -191,12 +185,12 @@ export default function RelatoriosPage() {
       const tableData = notas.map((nota) => [
         nota.numero_nfse?.toString() || '-',
         formatDate(nota.data_emissao),
-        (nota.tomadores?.razao_social || '-') +
-          (nota.tomadores?.cpf_cnpj ? '\n' + formatCpfCnpj(nota.tomadores.cpf_cnpj) : ''),
+        (nota.tomador_razao_social || '-') +
+          (nota.tomador_cnpj_cpf ? '\n' + formatCpfCnpj(nota.tomador_cnpj_cpf) : ''),
         formatCurrency(Number(nota.valor_servicos)),
         formatCurrency(getRetencoes(nota)),
         formatCurrency(getValorLiquido(nota)),
-        getUserDisplay(nota.user_id),
+        getUserDisplay(nota.created_by),
         statusLabels[nota.status] || nota.status,
       ]);
 
@@ -260,21 +254,20 @@ export default function RelatoriosPage() {
       const wsData = notas.map((nota) => ({
         'Numero NFSe': nota.numero_nfse || '-',
         'Data Emissao': formatDate(nota.data_emissao),
-        'Tomador - Razao Social': nota.tomadores?.razao_social || '-',
-        'Tomador - CPF/CNPJ': nota.tomadores?.cpf_cnpj
-          ? formatCpfCnpj(nota.tomadores.cpf_cnpj)
+        'Tomador - Razao Social': nota.tomador_razao_social || '-',
+        'Tomador - CPF/CNPJ': nota.tomador_cnpj_cpf
+          ? formatCpfCnpj(nota.tomador_cnpj_cpf)
           : '-',
         'Valor Bruto': Number(nota.valor_servicos),
-        'Ret. PIS': Number(nota.ret_pis) || 0,
-        'Ret. COFINS': Number(nota.ret_cofins) || 0,
-        'Ret. INSS': Number(nota.ret_inss) || 0,
-        'Ret. IRRF': Number(nota.ret_irrf) || 0,
-        'Ret. CSLL': Number(nota.ret_csll) || 0,
-        'Outras Retencoes': Number(nota.outras_retencoes) || 0,
+        'Ret. PIS': Number(nota.valor_pis) || 0,
+        'Ret. COFINS': Number(nota.valor_cofins) || 0,
+        'Ret. INSS': Number(nota.valor_inss) || 0,
+        'Ret. IRRF': Number(nota.valor_irrf) || 0,
+        'Ret. CSLL': Number(nota.valor_csll) || 0,
         'ISS Retido': nota.iss_retido ? (Number(nota.valor_iss) || 0) : 0,
         'Total Retencoes': getRetencoes(nota),
         'Valor Liquido': getValorLiquido(nota),
-        'Usuario': getUserDisplay(nota.user_id),
+        'Usuario': getUserDisplay(nota.created_by),
         'Status': statusLabels[nota.status] || nota.status,
       }));
 
@@ -290,7 +283,6 @@ export default function RelatoriosPage() {
         'Ret. INSS': '' as unknown as number,
         'Ret. IRRF': '' as unknown as number,
         'Ret. CSLL': '' as unknown as number,
-        'Outras Retencoes': '' as unknown as number,
         'ISS Retido': '' as unknown as number,
         'Total Retencoes': '' as unknown as number,
         'Valor Liquido': '' as unknown as number,
@@ -308,7 +300,6 @@ export default function RelatoriosPage() {
         'Ret. INSS': '' as unknown as number,
         'Ret. IRRF': '' as unknown as number,
         'Ret. CSLL': '' as unknown as number,
-        'Outras Retencoes': '' as unknown as number,
         'ISS Retido': '' as unknown as number,
         'Total Retencoes': totalRetencoes,
         'Valor Liquido': totalLiquido,
@@ -464,11 +455,11 @@ export default function RelatoriosPage() {
                         <td className="px-4 py-3">
                           <div>
                             <p className="font-medium text-gray-900">
-                              {nota.tomadores?.razao_social || '-'}
+                              {nota.tomador_razao_social || '-'}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {nota.tomadores?.cpf_cnpj
-                                ? formatCpfCnpj(nota.tomadores.cpf_cnpj)
+                              {nota.tomador_cnpj_cpf
+                                ? formatCpfCnpj(nota.tomador_cnpj_cpf)
                                 : '-'}
                             </p>
                           </div>
@@ -485,9 +476,9 @@ export default function RelatoriosPage() {
                         <td className="px-4 py-3">
                           <p
                             className="max-w-[120px] truncate text-sm text-gray-600"
-                            title={userMap[nota.user_id] || nota.user_id}
+                            title={userMap[nota.created_by] || nota.created_by}
                           >
-                            {getUserDisplay(nota.user_id)}
+                            {getUserDisplay(nota.created_by)}
                           </p>
                         </td>
                         <td className="px-4 py-3">
