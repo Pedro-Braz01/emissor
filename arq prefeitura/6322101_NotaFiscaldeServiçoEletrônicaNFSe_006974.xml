@@ -1,0 +1,134 @@
+<ConsultarNfseServicoPrestadoResposta xmlns="http://www.abrasf.org.br/nfse.xsd">
+  <ListaNfse>
+    <CompNfse>
+      <Nfse versao="2.04">
+        <InfNfse>
+          <Numero>6974</Numero>
+          <CodigoVerificacao>5F26CA6BE</CodigoVerificacao>
+          <DataEmissao>2026-04-07T17:16:58</DataEmissao>
+          <OutrasInformacoes>I - "DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL"; e \s\n II - "NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI."</OutrasInformacoes>
+          <ValoresNfse>
+            <BaseCalculo>600.00</BaseCalculo>
+            <Aliquota>0</Aliquota>
+            <ValorIss>0.00</ValorIss>
+            <ValorLiquidoNfse>600.00</ValorLiquidoNfse>
+          </ValoresNfse>
+          <DescricaoCodigoTributacaoMunicípio>Contabilidade.</DescricaoCodigoTributacaoMunicípio>
+          <ValorCredito>0</ValorCredito>
+          <PrestadorServico>
+            <RazaoSocial>Mensure Assessoria Contabil Ltda</RazaoSocial>
+            <NomeFantasia>
+            </NomeFantasia>
+            <Endereco>
+              <Endereco>Rua Bahia</Endereco>
+              <Numero>1026</Numero>
+              <Bairro>Ipiranga</Bairro>
+              <CodigoMunicipio>3543402</CodigoMunicipio>
+              <Uf>SP</Uf>
+              <Cep>14055020</Cep>
+            </Endereco>
+            <Contato>
+              <Telefone>01036337995</Telefone>
+              <Email>fiscal@mensure.com.br</Email>
+            </Contato>
+          </PrestadorServico>
+          <OrgaoGerador>
+            <CodigoMunicipio>3543402</CodigoMunicipio>
+            <Uf>SP</Uf>
+          </OrgaoGerador>
+          <DeclaracaoPrestacaoServico>
+            <InfDeclaracaoPrestacaoServico>
+              <Rps>
+                <IdentificacaoRps>
+                  <Numero>1112</Numero>
+                  <Serie>1</Serie>
+                  <Tipo>1</Tipo>
+                </IdentificacaoRps>
+                <DataEmissao>2026-04-07</DataEmissao>
+                <Status>1</Status>
+              </Rps>
+              <Competencia>2026-04-07</Competencia>
+              <Servico>
+                <Valores>
+                  <ValorServicos>600</ValorServicos>
+                  <ValorDeducoes>0</ValorDeducoes>
+                  <ValorPis>0</ValorPis>
+                  <ValorCofins>0</ValorCofins>
+                  <ValorInss>0</ValorInss>
+                  <ValorIr>0</ValorIr>
+                  <ValorCsll>0</ValorCsll>
+                  <OutrasRetencoes>0</OutrasRetencoes>
+                  <ValorIss>0</ValorIss>
+                  <Aliquota>0</Aliquota>
+                  <DescontoIncondicionado>0</DescontoIncondicionado>
+                  <DescontoCondicionado>0</DescontoCondicionado>
+                </Valores>
+                <IssRetido>2</IssRetido>
+                <ItemListaServico>17.19</ItemListaServico>
+                <CodigoCnae>6920601</CodigoCnae>
+                <CodigoTributacaoMunicipio>171901</CodigoTributacaoMunicipio>
+                <CodigoNbs>113022100</CodigoNbs>
+                <Discriminacao>HONORÁRIO CONTÁBIL REFERENTE ABERTURA DA EMPRESA,
+
+VALOR R$ 600,00 A PAGAR EM DUAS PARCELAS DE R$ 300,00, COM VENCIMENTO EM 15/04/26 E 15/05/26</Discriminacao>
+                <CodigoMunicipio>3543402</CodigoMunicipio>
+                <ExigibilidadeISS>1</ExigibilidadeISS>
+                <MunicipioIncidencia>3543402</MunicipioIncidencia>
+              </Servico>
+              <Prestador>
+                <CpfCnpj>
+                  <Cnpj>64930449000131</Cnpj>
+                </CpfCnpj>
+                <InscricaoMunicipal>6322101</InscricaoMunicipal>
+              </Prestador>
+              <TomadorServico>
+                <IdentificacaoTomador>
+                  <CpfCnpj>
+                    <Cnpj>65749887000160</Cnpj>
+                  </CpfCnpj>
+                </IdentificacaoTomador>
+                <RazaoSocial>PAIVA &amp; SILVA SERVIÇOS MEDICOS LTDA</RazaoSocial>
+                <Endereco>
+                  <Endereco>Avenida Presidente Vargas</Endereco>
+                  <Numero>950</Numero>
+                  <Complemento>APT 1404</Complemento>
+                  <Bairro>Jardim Sumaré</Bairro>
+                  <CodigoMunicipio>3543402</CodigoMunicipio>
+                  <Uf>SP</Uf>
+                  <Cep>14025405</Cep>
+                </Endereco>
+                <Contato>
+                  <Telefone>9581177406</Telefone>
+                  <Email>KAYLAPNUNES@GMAIL.COM</Email>
+                </Contato>
+              </TomadorServico>
+              <OptanteSimplesNacional>1</OptanteSimplesNacional>
+              <IncentivoFiscal>2</IncentivoFiscal>
+            </InfDeclaracaoPrestacaoServico>
+            <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+              <SignedInfo>
+                <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+                <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+                <Reference URI="">
+                  <Transforms>
+                    <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+                    <Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+                  </Transforms>
+                  <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+                  <DigestValue>OtPicH1xAHJgMsDsTB7CD0aFKM8=</DigestValue>
+                </Reference>
+              </SignedInfo>
+              <SignatureValue>PKzciI/+2R/q0K6oQsingcWI7CzNyY60Kzz0FNon0JHPR9zuv1VjmYQTO1WJyiOBdhdfjF7OxKk/ievl9qQlhHhL6qPdG4hrxQAJixfNmBRpsXpL87r63WMWAcMsEFtvbRBpU64A59lv7TNImsdqUVU3L8/aAl0cNSm0q3NJy8WqYwQG0DKr1Mw6TLfcHbPy937s+VtQlkjEdkZly7LqHqeKTdht99ISHBG5j+wIYvrepS/0CKVqKRA3JzhRDdJ6/BldFhxpue57VduKRZk70c1aSO9qQfuc9qESix0HkqGjrvCkvbPqgqC5iuUEF/Fx0HAlDpDvzbK2g4udwWO8wA==</SignatureValue>
+              <KeyInfo>
+                <X509Data>
+                  <X509Certificate>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</X509Certificate>
+                </X509Data>
+              </KeyInfo>
+            </Signature>
+          </DeclaracaoPrestacaoServico>
+        </InfNfse>
+      </Nfse>
+    </CompNfse>
+    <Pagina>1</Pagina>
+  </ListaNfse>
+</ConsultarNfseServicoPrestadoResposta>

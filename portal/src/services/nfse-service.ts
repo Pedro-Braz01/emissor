@@ -125,11 +125,39 @@ export class NfseService {
       }
 
       // 3. Obtém próximo número de RPS
+      // 3a. Consulta a prefeitura para verificar o último RPS disponível
+      const serieRps = empresa.serie_rps || ((this.soapClient as any).ambiente === 'producao' ? '1' : '8');
+
+      try {
+        const rpsDisponivelXml = XmlBuilder.consultarRpsDisponivel({
+          cnpj: empresa.cnpj,
+          inscricaoMunicipal: empresa.inscricao_municipal,
+        });
+        const rpsDisponivelResponse = await this.soapClient.consultarRpsDisponivel(rpsDisponivelXml);
+
+        if (rpsDisponivelResponse.success && rpsDisponivelResponse.xml) {
+          // Extrai o número do RPS disponível da resposta
+          const rpsMatch = rpsDisponivelResponse.xml.match(/<Numero>(\d+)<\/Numero>/i);
+          if (rpsMatch) {
+            const rpsPrefeitura = parseInt(rpsMatch[1]);
+            // Atualiza o último RPS da prefeitura no banco
+            await this.supabase
+              .from('empresas')
+              .update({ ultimo_rps_prefeitura: rpsPrefeitura > 0 ? rpsPrefeitura - 1 : 0 })
+              .eq('id', input.empresaId);
+          }
+        }
+      } catch (rpsError) {
+        // Se falhar a consulta à prefeitura, continua com o número local
+        console.warn('Falha ao consultar RPS disponível na prefeitura, usando numeração local:', rpsError);
+      }
+
+      // 3b. Obtém próximo RPS do banco (já considera o último da prefeitura)
       const { data: rpsData } = await this.supabase.rpc('get_next_rps_number', {
         p_empresa_id: input.empresaId,
+        p_serie: serieRps,
       });
       const numeroRps = rpsData || 1;
-      const serieRps = empresa.serie_rps || '8';
 
       // 4. Prepara dados do tomador
       let tomadorId: string | undefined;
@@ -189,6 +217,17 @@ export class NfseService {
         .insert({
           empresa_id: input.empresaId,
           tomador_id: tomadorId,
+          tomador_razao_social: input.tomador.razaoSocial,
+          tomador_cnpj_cpf: input.tomador.cpfCnpj,
+          tomador_email: input.tomador.email || null,
+          tomador_telefone: input.tomador.telefone || null,
+          tomador_endereco: input.tomador.endereco?.logradouro || null,
+          tomador_numero: input.tomador.endereco?.numero || null,
+          tomador_complemento: input.tomador.endereco?.complemento || null,
+          tomador_bairro: input.tomador.endereco?.bairro || null,
+          tomador_cep: input.tomador.endereco?.cep || null,
+          tomador_cidade: null,
+          tomador_uf: input.tomador.endereco?.uf || null,
           numero_rps: numeroRps,
           serie_rps: serieRps,
           tipo_rps: 'RPS',
@@ -204,6 +243,7 @@ export class NfseService {
           valor_irrf: retIrrf,
           valor_csll: retCsll,
           valor_liquido: valorLiquido,
+          valor_base_calculo: valorServicos,
           iss_retido: input.servico.issRetido || false,
           item_lista_servico: input.servico.itemListaServico || empresa.item_lista_servico,
           codigo_cnae: input.servico.codigoCnae || empresa.codigo_cnae,

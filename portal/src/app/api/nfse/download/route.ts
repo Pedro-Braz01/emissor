@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   // Busca a nota (RLS garante acesso)
   const { data: nota, error } = await supabase
     .from('notas_fiscais')
-    .select('id, empresa_id, numero_nfse, numero_rps, serie_rps, xml_enviado, xml_retorno, status, valor_servicos, valor_iss, aliquota_iss, discriminacao, competencia, data_emissao, codigo_verificacao, tomador_razao_social, tomador_cnpj_cpf, iss_retido, valor_pis, valor_cofins, valor_inss, valor_irrf, valor_csll, valor_liquido')
+    .select('id, empresa_id, numero_nfse, numero_rps, serie_rps, xml_enviado, xml_retorno, status, valor_servicos, valor_iss, aliquota_iss, discriminacao, competencia, data_emissao, codigo_verificacao, tomador_razao_social, tomador_cnpj_cpf, tomador_email, tomador_telefone, tomador_cep, tomador_endereco, tomador_numero, tomador_complemento, tomador_bairro, tomador_cidade, tomador_uf, iss_retido, valor_pis, valor_cofins, valor_inss, valor_irrf, valor_csll, valor_liquido, valor_deducoes, valor_base_calculo, desconto_condicionado, desconto_incondicionado, codigo_cnae, item_lc116, atividade_municipal, codigo_nbs')
     .eq('id', notaId)
     .single();
 
@@ -89,12 +89,29 @@ export async function GET(request: Request) {
           valorIrrf: nota.valor_irrf,
           valorCsll: nota.valor_csll,
           valorLiquido: nota.valor_liquido,
+          valorDeducoes: nota.valor_deducoes,
+          valorBaseCalculo: nota.valor_base_calculo,
+          descontoCondicionado: nota.desconto_condicionado,
+          descontoIncondicionado: nota.desconto_incondicionado,
           issRetido: nota.iss_retido,
           discriminacao: nota.discriminacao,
+          codigoCnae: nota.codigo_cnae,
+          itemLc116: nota.item_lc116,
+          atividadeMunicipal: nota.atividade_municipal,
+          codigoNbs: nota.codigo_nbs,
         },
         tomador: {
           razaoSocial: nota.tomador_razao_social,
           cpfCnpj: nota.tomador_cnpj_cpf,
+          email: nota.tomador_email,
+          telefone: nota.tomador_telefone,
+          cep: nota.tomador_cep,
+          endereco: nota.tomador_endereco,
+          numero: nota.tomador_numero,
+          complemento: nota.tomador_complemento,
+          bairro: nota.tomador_bairro,
+          cidade: nota.tomador_cidade,
+          uf: nota.tomador_uf,
         },
         prestador: empresa ? {
           razaoSocial: empresa.razao_social,

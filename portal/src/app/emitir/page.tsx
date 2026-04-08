@@ -9,7 +9,7 @@ import { createClientSupabaseClient } from '@/lib/supabase-client';
 import DashboardLayout from '@/components/layout/dashboard-layout';
 import {
   CNAES, LC116_ITEMS, NBS_ITEMS,
-  getLc116ByCnae, searchCnae, searchNbs,
+  getLc116ByCnae, getLc116ByNbs, searchCnae, searchNbs,
   type CnaeItem, type Lc116Item, type NbsItem,
 } from '@/lib/dados-prefeitura';
 import {
@@ -307,6 +307,14 @@ export default function EmitirPage() {
     setCodigoNbs(item.codigo);
     setNbsSearch(`${item.codigo} - ${item.descricao}`);
     setNbsDropdownOpen(false);
+    // Auto-fill LC116 from NBS
+    const lc116Items = getLc116ByNbs(item.codigo);
+    setLc116Options(lc116Items);
+    if (lc116Items.length === 1) {
+      setItemLc116(lc116Items[0].codigo);
+    } else if (lc116Items.length > 1) {
+      setItemLc116('');
+    }
   };
 
   // ── Atividade Municipal dropdown logic (filtra por LC116 quando preenchido) ──

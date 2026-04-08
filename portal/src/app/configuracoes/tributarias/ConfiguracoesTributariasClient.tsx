@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClientSupabaseClient } from '@/lib/supabase-client';
+import DashboardLayout from '@/components/layout/dashboard-layout';
 
 type Empresa = { id: string; razao_social: string; regime_tributario: string };
 type Config = {
@@ -34,7 +34,6 @@ const DEFAULTS: Omit<NonNullable<Config>, 'id' | 'empresa_id'> = {
 export default function ConfiguracoesTributariasClient({
   empresa, config
 }: { empresa: Empresa; config: Config }) {
-  const router = useRouter();
   const [form, setForm] = useState({ ...DEFAULTS, ...config });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -76,25 +75,17 @@ export default function ConfiguracoesTributariasClient({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
+    <DashboardLayout>
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
           <div>
-            <button onClick={() => router.push('/dashboard')}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm flex items-center gap-1.5 mb-1">
-              ← Dashboard
-            </button>
-            <h1 className="text-gray-900 dark:text-white font-semibold">Configurações Tributárias</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{empresa.razao_social}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Configurações Tributárias</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{empresa.razao_social}</p>
           </div>
           <span className="text-xs px-2.5 py-1 rounded-full border bg-blue-500/10 text-blue-400 border-blue-500/20">
             {empresa.regime_tributario.replace(/_/g, ' ').toUpperCase()}
           </span>
         </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
 
         {/* Serviço */}
         <Section title="Código de Serviço">
@@ -186,8 +177,8 @@ export default function ConfiguracoesTributariasClient({
         >
           {saving ? 'Salvando...' : saved ? '✓ Configurações Salvas' : 'Salvar Configurações'}
         </button>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 

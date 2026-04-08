@@ -30,7 +30,11 @@
       "Bash(grep -i \"credenciamento\\\\|vinculo\" /c/Users/Pedro/emissor/database/migrations/*.sql)",
       "Bash(find /c/Users/Pedro/emissor/database -name \"*.sql\" -exec grep -l \"get_next_rps_number\" {} \\\\;)",
       "Bash(npx --no-install tsc --noEmit --project portal/tsconfig.json)",
-      "Bash(node_modules/.bin/tsc --noEmit src/app/admin/page.tsx)"
+      "Bash(node_modules/.bin/tsc --noEmit src/app/admin/page.tsx)",
+      "Bash(find /c/Users/Pedro/emissor/portal/src -name \"*.tsx\" -type f -exec grep -l \"notaId\\\\|download.*route\\\\|tipo.*pdf\" {} \\\\;)",
+      "Bash(grep -n \"ADD COLUMN\" \"C:\\\\Users\\\\Pedro\\\\emissor\\\\database\\\\migrations\"/*)",
+      "Bash(find \"C:\\\\Users\\\\Pedro\\\\emissor\\\\database\" -name \"*.sql\" -exec grep -l \"serie_rps\\\\|regime_especial\\\\|optante_simples\\\\|incentivo_fiscal\" {} \\\\;)",
+      "Bash(grep -r \"SUPABASE_URL\\\\|NEXT_PUBLIC_SUPABASE\" .env*)"
     ]
   }
 }

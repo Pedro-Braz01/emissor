@@ -63,6 +63,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Dados inválidos', details: err }, { status: 400 });
   }
 
+  // ── Verifica permissão na empresa ──
+  const { data: perfil } = await supabase
+    .from('perfis_usuarios')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('empresa_id', body.empresaId)
+    .eq('ativo', true)
+    .single();
+
+  const { data: empresaOwner } = await supabase
+    .from('empresas')
+    .select('user_id')
+    .eq('id', body.empresaId)
+    .single();
+
+  if (!perfil && empresaOwner?.user_id !== user.id) {
+    return NextResponse.json({ error: 'Sem permissão para esta empresa' }, { status: 403 });
+  }
+
   // ── Verifica licença ──
   const { data: licenca } = await supabase
     .from('licencas')
@@ -96,7 +115,10 @@ export async function POST(request: Request) {
   // ── Emite via NfseService ──
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY!;
-  const encryptionKey = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
+  const encryptionKey = process.env.ENCRYPTION_KEY;
+  if (!encryptionKey) {
+    return NextResponse.json({ error: 'Chave de criptografia não configurada. Defina ENCRYPTION_KEY.' }, { status: 500 });
+  }
   const ambiente = (process.env.NFSE_AMBIENTE || 'homologacao') as 'homologacao' | 'producao';
 
   const nfseService = createNfseService(supabaseUrl, supabaseKey, ambiente, encryptionKey);

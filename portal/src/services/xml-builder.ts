@@ -139,22 +139,22 @@ export class XmlBuilder {
       (servico.valorInss || 0) + (servico.valorIr || 0) + (servico.valorCsll || 0) +
       (servico.outrasRetencoes || 0) + valorIss;
 
-    // Monta bloco <Valores> - ValorServicos é obrigatório, demais são opcionais
+    // Monta bloco <Valores> - todas as tags incluídas (padrão Ribeirão Preto)
     const valoresXml = [
       `<ValorServicos>${formatDecimal(servico.valorServicos)}</ValorServicos>`,
-      optTag('ValorDeducoes', servico.valorDeducoes),
-      optTag('ValorPis', servico.valorPis),
-      optTag('ValorCofins', servico.valorCofins),
-      optTag('ValorInss', servico.valorInss),
-      optTag('ValorIr', servico.valorIr),
-      optTag('ValorCsll', servico.valorCsll),
-      optTag('OutrasRetencoes', servico.outrasRetencoes),
-      optTag('ValTotTributos', valTotTributos),
+      `<ValorDeducoes>${formatDecimal(servico.valorDeducoes || 0)}</ValorDeducoes>`,
+      `<ValorPis>${formatDecimal(servico.valorPis || 0)}</ValorPis>`,
+      `<ValorCofins>${formatDecimal(servico.valorCofins || 0)}</ValorCofins>`,
+      `<ValorInss>${formatDecimal(servico.valorInss || 0)}</ValorInss>`,
+      `<ValorIr>${formatDecimal(servico.valorIr || 0)}</ValorIr>`,
+      `<ValorCsll>${formatDecimal(servico.valorCsll || 0)}</ValorCsll>`,
+      `<OutrasRetencoes>${formatDecimal(servico.outrasRetencoes || 0)}</OutrasRetencoes>`,
+      `<ValTotTributos>${formatDecimal(valTotTributos)}</ValTotTributos>`,
       `<ValorIss>${formatDecimal(valorIss)}</ValorIss>`,
       `<Aliquota>${formatDecimal(servico.aliquota, 4)}</Aliquota>`,
-      optTag('DescontoIncondicionado', servico.descontoIncondicionado),
-      optTag('DescontoCondicionado', servico.descontoCondicionado),
-    ].filter(Boolean).join('\n          ');
+      `<DescontoIncondicionado>${formatDecimal(servico.descontoIncondicionado || 0)}</DescontoIncondicionado>`,
+      `<DescontoCondicionado>${formatDecimal(servico.descontoCondicionado || 0)}</DescontoCondicionado>`,
+    ].join('\n          ');
 
     // MunicipioIncidencia: obrigatório quando ExigibilidadeISS é 1, 3, 5, 6 ou 7
     const exigibilidade = servico.exigibilidadeIss || 1;

@@ -163,6 +163,8 @@ export default function ConfiguracoesEmpresaPage() {
       telefone: telefone || null,
       endereco_completo: endereco || null,
       cnaes_cadastrados: cnaesCadastrados,
+      envio_auto_contador: envioAutoContador,
+      envio_auto_emissor: envioAutoEmissor,
     };
 
     const { error: updateError } = await supabase
