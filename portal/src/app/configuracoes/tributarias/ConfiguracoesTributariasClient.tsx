@@ -76,17 +76,17 @@ export default function ConfiguracoesTributariasClient({
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div>
             <button onClick={() => router.push('/dashboard')}
-              className="text-gray-400 hover:text-white text-sm flex items-center gap-1.5 mb-1">
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm flex items-center gap-1.5 mb-1">
               ← Dashboard
             </button>
-            <h1 className="text-white font-semibold">Configurações Tributárias</h1>
-            <p className="text-gray-400 text-xs mt-0.5">{empresa.razao_social}</p>
+            <h1 className="text-gray-900 dark:text-white font-semibold">Configurações Tributárias</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{empresa.razao_social}</p>
           </div>
           <span className="text-xs px-2.5 py-1 rounded-full border bg-blue-500/10 text-blue-400 border-blue-500/20">
             {empresa.regime_tributario.replace(/_/g, ' ').toUpperCase()}
@@ -125,12 +125,12 @@ export default function ConfiguracoesTributariasClient({
                 <div
                   onClick={() => set('iss_retido_fonte', !form.iss_retido_fonte)}
                   className={`w-11 h-6 rounded-full transition-colors cursor-pointer relative
-                    ${form.iss_retido_fonte ? 'bg-blue-600' : 'bg-gray-600'}`}
+                    ${form.iss_retido_fonte ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all
                     ${form.iss_retido_fonte ? 'left-6' : 'left-1'}`} />
                 </div>
-                <span className="text-gray-300 text-sm">
+                <span className="text-gray-700 dark:text-gray-300 text-sm">
                   {form.iss_retido_fonte ? 'Sim — tomador retém' : 'Não — prestador recolhe'}
                 </span>
               </label>
@@ -144,7 +144,7 @@ export default function ConfiguracoesTributariasClient({
           badge={isSimplesNacional ? 'Não aplicável — Simples Nacional' : undefined}
         >
           {isSimplesNacional ? (
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               No Simples Nacional as retenções federais (PIS, COFINS, CSLL, IRRF) são unificadas no DAS
               e não são destacadas na NFS-e. Alíquotas zeradas automaticamente.
             </p>
@@ -193,16 +193,16 @@ export default function ConfiguracoesTributariasClient({
 
 // ── Sub-componentes ──────────────────────────────────────────────────
 
-const inputCls = `w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm
-  placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`;
+const inputCls = `w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
+  placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`;
 
 function Section({ title, badge, children }: {
   title: string; badge?: string; children: React.ReactNode;
 }) {
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-5">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-white font-medium text-sm">{title}</h2>
+        <h2 className="text-gray-900 dark:text-white font-medium text-sm">{title}</h2>
         {badge && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
             {badge}
@@ -219,8 +219,8 @@ function Field({ label, hint, children }: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
-      {hint && <p className="text-xs text-gray-500 mb-1">{hint}</p>}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+      {hint && <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{hint}</p>}
       {children}
     </div>
   );
@@ -261,7 +261,7 @@ function PreviewCalculo({ form, regime }: { form: typeof DEFAULTS; regime: strin
     <div className="space-y-2">
       {rows.map(row => (
         <div key={row.label} className={`flex justify-between text-sm
-          ${row.bold ? 'text-white font-semibold border-t border-gray-700 pt-2 mt-2' : 'text-gray-400'}`}>
+          ${row.bold ? 'text-gray-900 dark:text-white font-semibold border-t border-gray-200 dark:border-gray-700 pt-2 mt-2' : 'text-gray-500 dark:text-gray-400'}`}>
           <span>{row.label}</span>
           <span className={row.bold ? 'text-green-400' : ''}>{row.value}</span>
         </div>

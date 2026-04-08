@@ -185,25 +185,25 @@ export default function CadastroPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-xl">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500/10 rounded-full mb-4">
-              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-500/10 rounded-full mb-4">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Cadastro realizado!</h2>
-            <p className="text-gray-400 text-sm mb-2">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Cadastro realizado!</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
               Sua empresa foi cadastrada com sucesso.
             </p>
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-6">
-              <p className="text-yellow-400 text-sm">
+            <div className="bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-300 dark:border-yellow-500/30 rounded-lg p-3 mb-6">
+              <p className="text-yellow-600 dark:text-yellow-400 text-sm">
                 Sua licença será ativada após a confirmação do pagamento.
                 Entraremos em contato pelo e-mail informado.
               </p>
             </div>
-            <p className="text-gray-500 text-xs mb-4">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-4">
               Verifique seu e-mail para confirmar a conta.
             </p>
             <Link
@@ -219,7 +219,7 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-6">
@@ -229,8 +229,8 @@ export default function CadastroPage() {
                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white">Cadastrar Empresa</h1>
-          <p className="text-gray-400 text-sm mt-1">{'Emissor NFSe - Ribeirão Preto'}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Cadastrar Empresa</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{'Emissor NFSe - Ribeirão Preto'}</p>
         </div>
 
         {/* Steps indicator */}
@@ -239,29 +239,29 @@ export default function CadastroPage() {
             <div key={s} className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
                 ${step === s ? 'bg-blue-600 text-white' :
-                  ((['dados', 'endereco', 'confirmacao'].indexOf(step) > i) ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-500')}`}>
+                  ((['dados', 'endereco', 'confirmacao'].indexOf(step) > i) ? 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-500')}`}>
                 {['dados', 'endereco', 'confirmacao'].indexOf(step) > i ? '\u2713' : i + 1}
               </div>
-              {i < 2 && <div className="w-8 h-0.5 bg-gray-700" />}
+              {i < 2 && <div className="w-8 h-0.5 bg-gray-200 dark:bg-gray-700" />}
             </div>
           ))}
         </div>
 
         {/* Card */}
-        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-xl">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-5">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-red-100 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 rounded-lg p-3 mb-5">
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
           )}
 
           {/* Step 1: Dados da Empresa */}
           {step === 'dados' && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white mb-4">Dados da Empresa</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Dados da Empresa</h2>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">CNPJ *</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">CNPJ *</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -270,7 +270,7 @@ export default function CadastroPage() {
                     onBlur={handleCnpjBlur}
                     placeholder="00.000.000/0001-00"
                     maxLength={18}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                   {cnpjLoading && (
@@ -279,35 +279,35 @@ export default function CadastroPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{'Os dados serão preenchidos automaticamente'}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{'Os dados serão preenchidos automaticamente'}</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">{'Razão Social *'}</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{'Razão Social *'}</label>
                   <input type="text" value={razaoSocial} onChange={e => setRazaoSocial(e.target.value)}
                     placeholder={'Razão Social da Empresa'}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Nome Fantasia</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Nome Fantasia</label>
                   <input type="text" value={nomeFantasia} onChange={e => setNomeFantasia(e.target.value)}
                     placeholder="Nome Fantasia"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">{'Inscrição Municipal *'}</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{'Inscrição Municipal *'}</label>
                   <input type="text" value={inscricaoMunicipal} onChange={e => setInscricaoMunicipal(e.target.value)}
                     placeholder={'Número da IM'}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">{'Regime Tributário *'}</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{'Regime Tributário *'}</label>
                   <select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                     <option value="simples_nacional">Simples Nacional</option>
                     <option value="lucro_presumido">Lucro Presumido</option>
@@ -316,38 +316,38 @@ export default function CadastroPage() {
                 </div>
               </div>
 
-              <hr className="border-gray-700" />
-              <h3 className="text-sm font-medium text-gray-300">Dados de Acesso</h3>
+              <hr className="border-gray-200 dark:border-gray-700" />
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Dados de Acesso</h3>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">E-mail *</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">E-mail *</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="seu@email.com"
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                  className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Telefone</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Telefone</label>
                 <input type="tel" value={telefone} onChange={e => setTelefone(e.target.value)}
                   placeholder="(00) 00000-0000"
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                  className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Senha *</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Senha *</label>
                   <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
                     placeholder={'Mínimo 6 caracteres'}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Confirmar Senha *</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Confirmar Senha *</label>
                   <input type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)}
                     placeholder="Repita a senha"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
               </div>
@@ -364,16 +364,16 @@ export default function CadastroPage() {
           {/* Step 2: Endereço */}
           {step === 'endereco' && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white mb-4">{'Endereço'}</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{'Endereço'}</h2>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">CEP</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">CEP</label>
                 <div className="relative">
                   <input type="text" value={cep}
                     onChange={e => handleCepChange(e.target.value)}
                     onBlur={handleCepBlur}
                     placeholder="00000-000" maxLength={9}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                   {cepLoading && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -381,60 +381,60 @@ export default function CadastroPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{'O endereço será preenchido automaticamente'}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{'O endereço será preenchido automaticamente'}</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Logradouro</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Logradouro</label>
                   <input type="text" value={logradouro} onChange={e => setLogradouro(e.target.value)}
                     placeholder="Rua, Avenida..."
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">{'Número'}</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{'Número'}</label>
                   <input type="text" value={numero} onChange={e => setNumero(e.target.value)}
                     placeholder={'Nº'}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Complemento</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Complemento</label>
                   <input type="text" value={complemento} onChange={e => setComplemento(e.target.value)}
                     placeholder="Sala, Andar..."
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Bairro</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Bairro</label>
                   <input type="text" value={bairro} onChange={e => setBairro(e.target.value)}
                     placeholder="Bairro"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Cidade</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Cidade</label>
                   <input type="text" value={cidade} onChange={e => setCidade(e.target.value)}
                     placeholder="Cidade"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">UF</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">UF</label>
                   <input type="text" value={uf} onChange={e => setUf(e.target.value)}
                     placeholder="SP" maxLength={2}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                 </div>
               </div>
 
               <div className="flex gap-3 mt-2">
                 <button onClick={() => setStep('dados')}
-                  className="flex-1 border border-gray-600 text-gray-300 hover:bg-gray-700 font-medium py-2.5 rounded-lg transition-colors">
+                  className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium py-2.5 rounded-lg transition-colors">
                   Voltar
                 </button>
                 <button onClick={() => setStep('confirmacao')}
@@ -448,7 +448,7 @@ export default function CadastroPage() {
           {/* Step 3: Confirmação */}
           {step === 'confirmacao' && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white mb-4">Confirmar Dados</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Confirmar Dados</h2>
 
               <div className="space-y-3 text-sm">
                 <InfoRow label="CNPJ" value={cnpj} />
@@ -461,8 +461,8 @@ export default function CadastroPage() {
                 {logradouro && <InfoRow label={'Endereço'} value={`${logradouro}, ${numero} ${complemento ? `- ${complemento}` : ''} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`} />}
               </div>
 
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
-                <p className="text-yellow-400 text-sm">
+              <div className="bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-300 dark:border-yellow-500/30 rounded-lg p-3">
+                <p className="text-yellow-600 dark:text-yellow-400 text-sm">
                   {'Após o cadastro, sua licença ficará '}
                   <strong>pendente</strong>
                   {' até a confirmação do pagamento.'}
@@ -471,7 +471,7 @@ export default function CadastroPage() {
 
               <div className="flex gap-3 mt-2">
                 <button onClick={() => setStep('endereco')}
-                  className="flex-1 border border-gray-600 text-gray-300 hover:bg-gray-700 font-medium py-2.5 rounded-lg transition-colors">
+                  className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium py-2.5 rounded-lg transition-colors">
                   Voltar
                 </button>
                 <button onClick={handleSubmit} disabled={loading}
@@ -492,7 +492,7 @@ export default function CadastroPage() {
         </div>
 
         <div className="text-center mt-6">
-          <Link href="/login" className="text-gray-400 hover:text-white text-sm transition-colors">
+          <Link href="/login" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">
             {'Já tem conta? Faça login'}
           </Link>
         </div>
@@ -503,9 +503,9 @@ export default function CadastroPage() {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between py-2 border-b border-gray-700">
-      <span className="text-gray-400">{label}</span>
-      <span className="text-white font-medium text-right max-w-[60%] truncate">{value}</span>
+    <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+      <span className="text-gray-500 dark:text-gray-400">{label}</span>
+      <span className="text-gray-900 dark:text-white font-medium text-right max-w-[60%] truncate">{value}</span>
     </div>
   );
 }

@@ -77,8 +77,8 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
         {/* Empresa info */}
         {empresa && (
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{empresa.razao_social}</h2>
-            <p className="text-gray-500 text-sm mt-0.5">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{empresa.razao_social}</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">
               CNPJ: {empresa.cnpj} &middot; IM: {empresa.inscricao_municipal} &middot;&nbsp;
               {empresa.regime_tributario.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
             </p>
@@ -95,14 +95,14 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
         </div>
 
         {/* Tabela de notas */}
-        <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Notas Fiscais Recentes</h3>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Notas Fiscais Recentes</h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => router.push('/notas')}
-                className="text-gray-500 hover:text-gray-700 text-sm px-3 py-1.5 rounded-lg
-                           border border-gray-300 hover:border-gray-400 transition-colors"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm px-3 py-1.5 rounded-lg
+                           border border-gray-300 dark:border-gray-600 hover:border-gray-400 transition-colors"
               >
                 Ver Todas
               </button>
@@ -119,14 +119,14 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
 
           {notas.length === 0 ? (
             <div className="px-6 py-16 text-center">
-              <p className="text-gray-400 text-sm">Nenhuma nota emitida ainda.</p>
-              <p className="text-gray-300 text-xs mt-1">{'Clique em "+ Nova Nota" para começar.'}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma nota emitida ainda.</p>
+              <p className="text-gray-700 dark:text-gray-300 text-xs mt-1">{'Clique em "+ Nova Nota" para começar.'}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-xs text-gray-500 uppercase">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 dark:text-gray-400 uppercase">
                     <th className="text-left px-6 py-3 font-medium">RPS</th>
                     <th className="text-left px-6 py-3 font-medium">NFSe</th>
                     <th className="text-left px-6 py-3 font-medium">Tomador</th>
@@ -136,21 +136,21 @@ export default function DashboardClient({ empresa, notas, totais, userEmail }: P
                     <th className="text-right px-6 py-3 font-medium">Data</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {notas.map(nota => (
-                    <tr key={nota.id} className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    <tr key={nota.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                         onClick={() => router.push(`/notas`)}>
-                      <td className="px-6 py-3 text-gray-900 font-mono">#{nota.numero_rps}</td>
-                      <td className="px-6 py-3 text-gray-600">{nota.numero_nfse ?? '—'}</td>
-                      <td className="px-6 py-3 text-gray-600 max-w-[180px] truncate">{nota.tomador_razao_social}</td>
-                      <td className="px-6 py-3 text-gray-900 text-right font-mono">{fmt(nota.valor_servicos)}</td>
-                      <td className="px-6 py-3 text-gray-600 text-right font-mono">{fmt(nota.valor_iss)}</td>
+                      <td className="px-6 py-3 text-gray-900 dark:text-white font-mono">#{nota.numero_rps}</td>
+                      <td className="px-6 py-3 text-gray-600 dark:text-gray-400">{nota.numero_nfse ?? '—'}</td>
+                      <td className="px-6 py-3 text-gray-600 dark:text-gray-400 max-w-[180px] truncate">{nota.tomador_razao_social}</td>
+                      <td className="px-6 py-3 text-gray-900 dark:text-white text-right font-mono">{fmt(nota.valor_servicos)}</td>
+                      <td className="px-6 py-3 text-gray-600 dark:text-gray-400 text-right font-mono">{fmt(nota.valor_iss)}</td>
                       <td className="px-6 py-3 text-center">
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[nota.status] ?? 'bg-gray-100 text-gray-600'}`}>
                           {capitalize(nota.status)}
                         </span>
                       </td>
-                      <td className="px-6 py-3 text-gray-500 text-right">{fmtDate(nota.created_at)}</td>
+                      <td className="px-6 py-3 text-gray-500 dark:text-gray-400 text-right">{fmtDate(nota.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -175,7 +175,7 @@ function StatCard({ label, value, color }: {
     yellow: 'border-yellow-200 bg-yellow-50 text-yellow-700',
   };
   return (
-    <div className={`rounded-xl border p-4 ${palette[color] ?? 'border-gray-200 bg-white'}`}>
+    <div className={`rounded-xl border p-4 ${palette[color] ?? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
       <p className="text-xs opacity-70 mb-1">{label}</p>
       <p className="font-bold text-lg truncate">{value}</p>
     </div>

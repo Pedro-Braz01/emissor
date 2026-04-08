@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   // Busca dados da empresa para o PDF
   const { data: empresa } = await supabase
     .from('empresas')
-    .select('razao_social, cnpj, inscricao_municipal, endereco_completo, telefone, email_empresa')
+    .select('razao_social, cnpj, inscricao_municipal, endereco_completo, telefone, email_empresa, regime_tributario')
     .eq('id', nota.empresa_id || '')
     .single();
 
@@ -103,6 +103,7 @@ export async function GET(request: Request) {
           endereco: empresa.endereco_completo,
           telefone: empresa.telefone,
           email: empresa.email_empresa,
+          regimeTributario: empresa.regime_tributario,
         } : null,
       },
     });

@@ -2,10 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "NFSe Emissor Portal (Next.js)",
+      "name": "portal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "portal"],
-      "port": 3000
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "cwd": "portal"
     }
   ]
 }

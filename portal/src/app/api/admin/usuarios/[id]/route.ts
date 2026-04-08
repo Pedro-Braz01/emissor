@@ -8,7 +8,8 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim
 function getAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!
+    process.env.SUPABASE_SERVICE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
 
@@ -32,7 +33,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
   }
 
-  const userId = params.id;
+  const { id: userId } = params;
   const body = await request.json();
   const { senha, perfis } = body;
   const admin = getAdminClient();
@@ -54,10 +55,6 @@ export async function PATCH(
 
   // Perfis update
   if (perfis && Array.isArray(perfis)) {
-    if (perfis.length > 20) {
-      return NextResponse.json({ error: 'Maximo de 20 empresas por usuario' }, { status: 400 });
-    }
-
     // Staff cannot assign super_admin role
     if (!adminInfo.isMaster) {
       const hasSuperAdmin = perfis.some((p: any) => p.role === 'super_admin');
@@ -121,7 +118,7 @@ export async function PATCH(
   return NextResponse.json({ success: true });
 }
 
-// DELETE - Deactivate user (set all perfis to ativo=false). ONLY master.
+// DELETE - Remove user completely. ONLY master.
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -133,20 +130,44 @@ export async function DELETE(
   }
 
   if (!adminInfo.isMaster) {
-    return NextResponse.json({ error: 'Apenas master pode desativar usuarios' }, { status: 403 });
+    return NextResponse.json({ error: 'Apenas master pode excluir usuarios' }, { status: 403 });
   }
 
-  const userId = params.id;
+  const { id: userId } = params;
+
+  if (!userId || userId === adminInfo.id) {
+    return NextResponse.json({ error: 'Operação inválida' }, { status: 400 });
+  }
+
   const admin = getAdminClient();
 
-  const { error } = await admin
+  // 1. Remove todos os perfis do usuário (hard delete para limpar relações)
+  const { error: perfisDeleteError } = await admin
     .from('perfis_usuarios')
-    .update({ ativo: false })
+    .delete()
     .eq('user_id', userId);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (perfisDeleteError) {
+    console.error('Erro ao remover perfis:', perfisDeleteError);
+    // Continua tentando remover o auth user mesmo se perfis falhar
   }
 
-  return NextResponse.json({ success: true, message: 'Todos os perfis do usuario foram desativados' });
+  // 2. Remove o usuário do Supabase Auth definitivamente
+  const { error: deleteError } = await admin.auth.admin.deleteUser(userId);
+
+  if (deleteError) {
+    // Se falhou ao deletar do auth, tenta pelo menos desativar perfis
+    await admin
+      .from('perfis_usuarios')
+      .update({ ativo: false })
+      .eq('user_id', userId);
+
+    return NextResponse.json({
+      error: 'Erro ao excluir usuario do auth: ' + deleteError.message,
+      partial: true,
+      message: 'Perfis foram removidos/desativados, mas o usuario auth permanece.'
+    }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, message: 'Usuario excluido com sucesso' });
 }

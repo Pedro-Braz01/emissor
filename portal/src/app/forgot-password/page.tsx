@@ -17,23 +17,30 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError('');
 
-    const supabase = createClientSupabaseClient();
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      const supabase = createClientSupabaseClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
 
-    if (resetError) {
-      setError('Erro ao enviar email. Verifique o endereço informado.');
+      if (resetError) {
+        console.error('Reset password error:', resetError);
+        setError('Erro ao enviar email. Verifique o endereço informado.');
+        setLoading(false);
+        return;
+      }
+
+      setSent(true);
+    } catch (err) {
+      console.error('Reset password exception:', err);
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setSent(true);
-    setLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -43,23 +50,23 @@ export default function ForgotPasswordPage() {
                 d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white">Recuperar Senha</h1>
-          <p className="text-gray-400 text-sm mt-1">Enviaremos um link para redefinir sua senha</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Recuperar Senha</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Enviaremos um link para redefinir sua senha</p>
         </div>
 
         {/* Card */}
-        <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-xl">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl">
           {sent ? (
             <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500/10 rounded-full mb-2">
-                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-500/10 rounded-full mb-2">
+                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-white">Email enviado!</h2>
-              <p className="text-gray-400 text-sm">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Email enviado!</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 {'Verifique sua caixa de entrada (e spam) em '}
-                <strong className="text-white">{email}</strong>
+                <strong className="text-gray-900 dark:text-white">{email}</strong>
                 {'. Clique no link recebido para redefinir sua senha.'}
               </p>
               <Link href="/login" className="block text-blue-400 hover:text-blue-300 text-sm mt-4">
@@ -69,21 +76,21 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-5">
-                  <p className="text-red-400 text-sm">{error}</p>
+                <div className="bg-red-100 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 rounded-lg p-3 mb-5">
+                  <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1.5">E-mail cadastrado</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">E-mail cadastrado</label>
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="seu@email.com"
                     required
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                 </div>
@@ -99,7 +106,7 @@ export default function ForgotPasswordPage() {
               </form>
 
               <div className="mt-6 text-center">
-                <Link href="/login" className="text-gray-400 hover:text-white text-sm transition-colors">
+                <Link href="/login" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">
                   Voltar para o login
                 </Link>
               </div>

@@ -12,19 +12,30 @@ body {
   padding: 0;
 }
 
-/* Scrollbar customizada para dark mode */
+/* Scrollbar - Light */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #f3f4f6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: #d1d5db;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Scrollbar - Dark */
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }
 
@@ -33,7 +44,7 @@ body {
 @layer components {
   /* Labels */
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
   }
 
   /* Inputs */
@@ -41,6 +52,7 @@ body {
     @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900
            placeholder-gray-400 shadow-sm
            focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20
+           dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-500
            transition-colors;
   }
 
@@ -50,7 +62,7 @@ body {
 
   /* Error text */
   .error-text {
-    @apply mt-1 text-xs text-red-600;
+    @apply mt-1 text-xs text-red-600 dark:text-red-400;
   }
 
   /* Buttons */
@@ -68,6 +80,7 @@ body {
   .btn-outline {
     @apply border border-gray-300 bg-white text-gray-700
            hover:bg-gray-50
+           dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700
            focus:outline-none focus:ring-2 focus:ring-primary-500/20;
   }
 

@@ -173,8 +173,8 @@ export default function LicencasPage() {
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
             <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
-            <h2 className="mt-4 text-xl font-semibold">Acesso Restrito</h2>
-            <p className="mt-2 text-gray-500">
+            <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">Acesso Restrito</h2>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
               Apenas administradores MASTER podem acessar esta página.
             </p>
           </div>
@@ -220,8 +220,8 @@ export default function LicencasPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Licenças</h1>
-          <p className="mt-1 text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciar Licenças</h1>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">
             Controle os clientes e suas licenças de uso
           </p>
         </div>
@@ -234,7 +234,7 @@ export default function LicencasPage() {
               Controle também via Google Sheets
             </p>
             <p className="mt-1 text-sm text-blue-700">
-              Você pode gerenciar licenças editando a planilha de controle. 
+              Você pode gerenciar licenças editando a planilha de controle.
               Altere a coluna "Status" para ATIVO ou BLOQUEADO.
             </p>
           </div>
@@ -242,51 +242,51 @@ export default function LicencasPage() {
 
         {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
                 <Users className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total Clientes</p>
-                <p className="text-xl font-bold">{tenants.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Clientes</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{tenants.length}</p>
               </div>
             </div>
           </div>
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Ativos</p>
-                <p className="text-xl font-bold">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Ativos</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {tenants.filter((t) => t.licencas?.status === 'ATIVO').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Em Trial</p>
-                <p className="text-xl font-bold">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Em Trial</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {tenants.filter((t) => t.licencas?.status === 'TRIAL').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
                 <Lock className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Bloqueados</p>
-                <p className="text-xl font-bold">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Bloqueados</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {tenants.filter((t) => t.licencas?.status === 'BLOQUEADO').length}
                 </p>
               </div>
@@ -297,7 +297,7 @@ export default function LicencasPage() {
         {/* Filtros */}
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
             <input
               type="text"
               placeholder="Buscar por nome, CNPJ ou email..."
@@ -320,7 +320,7 @@ export default function LicencasPage() {
         </div>
 
         {/* Tabela */}
-        <div className="rounded-xl border bg-white shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
@@ -329,7 +329,7 @@ export default function LicencasPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-sm font-medium text-gray-500">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
                     <th className="px-4 py-3">Cliente</th>
                     <th className="px-4 py-3">Plano</th>
                     <th className="px-4 py-3">Status</th>
@@ -338,22 +338,22 @@ export default function LicencasPage() {
                     <th className="px-4 py-3 text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {tenantsFiltrados.map((tenant) => {
                     const licenca = tenant.licencas;
                     const status = licenca?.status || 'INATIVO';
                     const statusColor = statusColors[status] || statusColors.BLOQUEADO;
 
                     return (
-                      <tr key={tenant.id} className="hover:bg-gray-50">
+                      <tr key={tenant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="px-4 py-3">
                           <div>
-                            <p className="font-medium text-gray-900">{tenant.nome}</p>
-                            <p className="text-sm text-gray-500">{tenant.email}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{tenant.nome}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{tenant.email}</p>
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                          <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">
                             {tenant.plano}
                           </span>
                         </td>
@@ -378,11 +378,11 @@ export default function LicencasPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-sm">
-                            <p>
+                            <p className="text-gray-900 dark:text-white">
                               <FileText className="mr-1 inline h-3 w-3" />
                               {tenant.notas_mes_atual}/{tenant.max_notas_mes} notas
                             </p>
-                            <p className="text-gray-500">
+                            <p className="text-gray-500 dark:text-gray-400">
                               <Building2 className="mr-1 inline h-3 w-3" />
                               {tenant.empresas_ativas} empresas
                             </p>
@@ -390,7 +390,7 @@ export default function LicencasPage() {
                         </td>
                         <td className="px-4 py-3">
                           {licenca?.validade ? (
-                            <span className="text-sm">
+                            <span className="text-sm text-gray-900 dark:text-white">
                               {formatDate(licenca.validade)}
                             </span>
                           ) : licenca?.trial_fim ? (
@@ -398,7 +398,7 @@ export default function LicencasPage() {
                               Trial até {formatDate(licenca.trial_fim)}
                             </span>
                           ) : (
-                            <span className="text-sm text-gray-400">-</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">-</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
@@ -446,11 +446,11 @@ export default function LicencasPage() {
         {/* Modal Bloquear */}
         {modalBloquear && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl bg-white p-6">
+            <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-800 p-6">
               <h3 className="text-lg font-semibold text-red-600">
                 Bloquear {modalBloquear.nome}?
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 O cliente não poderá mais emitir notas até ser desbloqueado.
               </p>
               <div className="mt-4">
@@ -485,11 +485,11 @@ export default function LicencasPage() {
         {/* Modal Desbloquear */}
         {modalDesbloquear && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl bg-white p-6">
+            <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-800 p-6">
               <h3 className="text-lg font-semibold text-green-600">
                 Desbloquear {modalDesbloquear.nome}?
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 O cliente poderá voltar a emitir notas normalmente.
               </p>
               <div className="mt-4">

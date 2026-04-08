@@ -49,13 +49,13 @@ export default function NotasPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  
+
   // Filtros
   const [filtroStatus, setFiltroStatus] = useState<string>('');
   const [filtroBusca, setFiltroBusca] = useState('');
   const [filtroDataInicio, setFiltroDataInicio] = useState('');
   const [filtroDataFim, setFiltroDataFim] = useState('');
-  
+
   // Modal de detalhes
   const [notaSelecionada, setNotaSelecionada] = useState<Nota | null>(null);
 
@@ -283,8 +283,8 @@ export default function NotasPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Consultar Notas</h1>
-            <p className="mt-1 text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Consultar Notas</h1>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">
               {totalCount} nota{totalCount !== 1 ? 's' : ''} encontrada{totalCount !== 1 ? 's' : ''}
             </p>
           </div>
@@ -305,12 +305,12 @@ export default function NotasPage() {
         </div>
 
         {/* Filtros */}
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
           <div className="grid gap-4 md:grid-cols-5">
             {/* Busca */}
             <div className="md:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 <input
                   type="text"
                   placeholder="Buscar por número, tomador..."
@@ -368,22 +368,22 @@ export default function NotasPage() {
         </div>
 
         {/* Tabela */}
-        <div className="rounded-xl border bg-white shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
             </div>
           ) : notasFiltradas.length === 0 ? (
             <div className="py-12 text-center">
-              <FileText className="mx-auto h-12 w-12 text-gray-300" />
-              <p className="mt-4 text-gray-500">Nenhuma nota encontrada</p>
+              <FileText className="mx-auto h-12 w-12 text-gray-700 dark:text-gray-300" />
+              <p className="mt-4 text-gray-500 dark:text-gray-400">Nenhuma nota encontrada</p>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b bg-gray-50 text-left text-sm font-medium text-gray-500">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
                       <th className="px-4 py-3">Número</th>
                       <th className="px-4 py-3">Tomador</th>
                       <th className="px-4 py-3">Data</th>
@@ -392,27 +392,27 @@ export default function NotasPage() {
                       <th className="px-4 py-3 text-right">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {notasFiltradas.map((nota) => {
                       const statusColor = statusColors[nota.status] || statusColors.RASCUNHO;
                       return (
-                        <tr key={nota.id} className="hover:bg-gray-50">
+                        <tr key={nota.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="px-4 py-3">
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-medium text-gray-900 dark:text-white">
                                 {nota.numero_nfse ? `NFSe ${nota.numero_nfse}` : '-'}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
                                 RPS {nota.numero_rps}/{nota.serie_rps}
                               </p>
                             </div>
                           </td>
                           <td className="px-4 py-3">
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-medium text-gray-900 dark:text-white">
                                 {nota.tomador_razao_social || '-'}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
                                 {nota.tomador_cnpj_cpf
                                   ? formatCpfCnpj(nota.tomador_cnpj_cpf)
                                   : '-'}
@@ -420,10 +420,10 @@ export default function NotasPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="text-gray-900">{formatDate(nota.data_emissao)}</p>
+                            <p className="text-gray-900 dark:text-white">{formatDate(nota.data_emissao)}</p>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-white">
                               {formatCurrency(Number(nota.valor_servicos))}
                             </p>
                           </td>
@@ -442,7 +442,7 @@ export default function NotasPage() {
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => setNotaSelecionada(nota)}
-                                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                className="rounded-lg p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300"
                                 title="Ver detalhes"
                               >
                                 <Eye className="h-4 w-4" />
@@ -450,7 +450,7 @@ export default function NotasPage() {
                               {nota.xml_enviado && (
                                 <button
                                   onClick={() => handleDownloadXml(nota, 'xml_enviado')}
-                                  className="rounded-lg p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
+                                  className="rounded-lg p-2 text-gray-500 dark:text-gray-400 hover:bg-blue-50 hover:text-blue-600"
                                   title="Baixar XML enviado"
                                 >
                                   <Download className="h-4 w-4" />
@@ -459,7 +459,7 @@ export default function NotasPage() {
                               {nota.xml_retorno && (
                                 <button
                                   onClick={() => handleDownloadXml(nota, 'xml_retorno')}
-                                  className="rounded-lg p-2 text-gray-400 hover:bg-green-50 hover:text-green-600"
+                                  className="rounded-lg p-2 text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-green-600"
                                   title="Baixar XML retorno"
                                 >
                                   <FileText className="h-4 w-4" />
@@ -468,7 +468,7 @@ export default function NotasPage() {
                               {nota.status === 'emitida' && nota.numero_nfse && (
                                 <button
                                   onClick={() => handleCancelar(nota)}
-                                  className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                                  className="rounded-lg p-2 text-gray-500 dark:text-gray-400 hover:bg-red-50 hover:text-red-600"
                                   title="Cancelar NFSe"
                                 >
                                   <XCircle className="h-4 w-4" />
@@ -485,8 +485,8 @@ export default function NotasPage() {
 
               {/* Paginação */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t px-4 py-3">
-                  <p className="text-sm text-gray-500">
+                <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Mostrando {(page - 1) * pageSize + 1} a{' '}
                     {Math.min(page * pageSize, totalCount)} de {totalCount}
                   </p>
@@ -498,7 +498,7 @@ export default function NotasPage() {
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {page} de {totalPages}
                     </span>
                     <button
@@ -518,16 +518,16 @@ export default function NotasPage() {
         {/* Modal de Detalhes */}
         {notaSelecionada && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white">
-              <div className="flex items-center justify-between border-b p-4">
-                <h2 className="text-lg font-semibold">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white dark:bg-gray-800">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {notaSelecionada.numero_nfse
                     ? `NFSe ${notaSelecionada.numero_nfse}`
                     : `RPS ${notaSelecionada.numero_rps}`}
                 </h2>
                 <button
                   onClick={() => setNotaSelecionada(null)}
-                  className="rounded-lg p-2 hover:bg-gray-100"
+                  className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <XCircle className="h-5 w-5" />
                 </button>
@@ -535,36 +535,36 @@ export default function NotasPage() {
               <div className="space-y-4 p-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <p className="text-sm text-gray-500">Numero NFSe</p>
-                    <p className="font-medium">{notaSelecionada.numero_nfse || '-'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Numero NFSe</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{notaSelecionada.numero_nfse || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Codigo Verificacao</p>
-                    <p className="font-medium">{notaSelecionada.codigo_verificacao || '-'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Codigo Verificacao</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{notaSelecionada.codigo_verificacao || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Tomador</p>
-                    <p className="font-medium">{notaSelecionada.tomador_razao_social || '-'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Tomador</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{notaSelecionada.tomador_razao_social || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">CPF/CNPJ</p>
-                    <p className="font-medium">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">CPF/CNPJ</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
                       {notaSelecionada.tomador_cnpj_cpf
                         ? formatCpfCnpj(notaSelecionada.tomador_cnpj_cpf)
                         : '-'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Valor Servicos</p>
-                    <p className="font-medium">{formatCurrency(Number(notaSelecionada.valor_servicos))}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Valor Servicos</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(Number(notaSelecionada.valor_servicos))}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">ISS</p>
-                    <p className="font-medium">{formatCurrency(Number(notaSelecionada.valor_iss))}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">ISS</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(Number(notaSelecionada.valor_iss))}</p>
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-sm text-gray-500">Discriminacao</p>
-                    <p className="whitespace-pre-wrap text-sm">{notaSelecionada.discriminacao}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Discriminacao</p>
+                    <p className="whitespace-pre-wrap text-sm text-gray-900 dark:text-white">{notaSelecionada.discriminacao}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">

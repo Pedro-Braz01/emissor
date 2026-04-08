@@ -234,8 +234,8 @@ export default function EmissaoLotePage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Emissao em Lote</h1>
-            <p className="mt-1 text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Emissao em Lote</h1>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">
               Emita multiplas notas fiscais de uma vez via planilha
             </p>
           </div>
@@ -249,18 +249,18 @@ export default function EmissaoLotePage() {
         </div>
 
         {/* Upload */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
           <div className="flex flex-col items-center gap-4">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 p-8 transition hover:border-blue-400 hover:bg-blue-50/50"
+              className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 p-8 transition hover:border-blue-400 hover:bg-blue-50/50"
             >
-              <Upload className="h-10 w-10 text-gray-400" />
+              <Upload className="h-10 w-10 text-gray-500 dark:text-gray-400" />
               <div className="text-center">
-                <p className="font-medium text-gray-700">
+                <p className="font-medium text-gray-700 dark:text-gray-300">
                   {arquivo ? arquivo.name : 'Clique para selecionar a planilha'}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Formatos aceitos: .xlsx, .xls, .csv
                 </p>
               </div>
@@ -294,28 +294,28 @@ export default function EmissaoLotePage() {
 
         {/* Preview da planilha */}
         {preview.length > 0 && !resumo && (
-          <div className="rounded-xl border bg-white shadow-sm">
-            <div className="border-b px-4 py-3">
-              <h3 className="font-semibold text-gray-900">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+            <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
                 Pre-visualizacao ({preview.length} primeiras linhas)
               </h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                     {Object.keys(preview[0]).map((col) => (
-                      <th key={col} className="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-500">
+                      <th key={col} className="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
                         {col}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {preview.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
+                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       {Object.values(row).map((val, i) => (
-                        <td key={i} className="whitespace-nowrap px-3 py-2 text-gray-700">
+                        <td key={i} className="whitespace-nowrap px-3 py-2 text-gray-700 dark:text-gray-300">
                           {String(val).substring(0, 40)}
                         </td>
                       ))}
@@ -346,9 +346,9 @@ export default function EmissaoLotePage() {
 
         {/* Resumo */}
         {resumo && (
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Resultado do Lote</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Resultado do Lote</h3>
               <button
                 onClick={exportResultados}
                 className="btn btn-outline flex items-center gap-2 text-sm"
@@ -358,9 +358,9 @@ export default function EmissaoLotePage() {
               </button>
             </div>
             <div className="grid gap-4 sm:grid-cols-4">
-              <div className="rounded-lg bg-gray-50 p-3">
-                <p className="text-sm text-gray-500">Total na Planilha</p>
-                <p className="text-xl font-bold">{resumo.totalPlanilha}</p>
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total na Planilha</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{resumo.totalPlanilha}</p>
               </div>
               <div className="rounded-lg bg-blue-50 p-3">
                 <p className="text-sm text-blue-600">Validos</p>
@@ -380,14 +380,14 @@ export default function EmissaoLotePage() {
 
         {/* Resultados detalhados */}
         {resultados.length > 0 && (
-          <div className="rounded-xl border bg-white shadow-sm">
-            <div className="border-b px-4 py-3">
-              <h3 className="font-semibold text-gray-900">Detalhes por Nota</h3>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+            <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+              <h3 className="font-semibold text-gray-900 dark:text-white">Detalhes por Nota</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left font-medium text-gray-500">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-left font-medium text-gray-500 dark:text-gray-400">
                     <th className="px-4 py-3">Linha</th>
                     <th className="px-4 py-3">Tomador</th>
                     <th className="px-4 py-3">CPF/CNPJ</th>
@@ -397,15 +397,15 @@ export default function EmissaoLotePage() {
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {resultados.map((r, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-700">{r.linha}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{r.razaoSocial}</td>
-                      <td className="px-4 py-3 text-gray-700">{formatCpfCnpj(r.cpfCnpj)}</td>
-                      <td className="px-4 py-3 text-right text-gray-900">{formatCurrency(r.valorServicos)}</td>
-                      <td className="px-4 py-3 text-gray-700">{r.numeroRps || '-'}</td>
-                      <td className="px-4 py-3 text-gray-700">{r.numeroNfse || '-'}</td>
+                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{r.linha}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{r.razaoSocial}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{formatCpfCnpj(r.cpfCnpj)}</td>
+                      <td className="px-4 py-3 text-right text-gray-900 dark:text-white">{formatCurrency(r.valorServicos)}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{r.numeroRps || '-'}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{r.numeroNfse || '-'}</td>
                       <td className="px-4 py-3">
                         {r.success ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">

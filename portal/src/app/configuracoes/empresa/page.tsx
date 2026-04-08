@@ -243,8 +243,8 @@ export default function ConfiguracoesEmpresaPage() {
     <DashboardLayout>
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{'Configurações da Empresa'}</h1>
-          <p className="mt-1 text-gray-500">{'Gerencie os dados e preferências da sua empresa'}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{'Configurações da Empresa'}</h1>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">{'Gerencie os dados e preferências da sua empresa'}</p>
         </div>
 
         {error && (
@@ -262,10 +262,10 @@ export default function ConfiguracoesEmpresaPage() {
         )}
 
         {/* Dados da Empresa */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-gray-500" />
-            <h2 className="font-semibold text-gray-900">Dados da Empresa</h2>
+            <Building2 className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">Dados da Empresa</h2>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -308,12 +308,12 @@ export default function ConfiguracoesEmpresaPage() {
         </div>
 
         {/* CNAEs Cadastrados */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
           <div className="mb-1 flex items-center gap-2">
-            <Search className="h-5 w-5 text-gray-500" />
-            <h2 className="font-semibold text-gray-900">CNAEs da Empresa</h2>
+            <Search className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">CNAEs da Empresa</h2>
           </div>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
             Cadastre os CNAEs do cartão CNPJ (atividade principal e secundárias). O CNAE marcado como padrão será pré-selecionado na emissão de notas.
           </p>
 
@@ -332,23 +332,23 @@ export default function ConfiguracoesEmpresaPage() {
                   placeholder="Buscar CNAE por código ou descrição..."
                   className="input pl-9"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
               </div>
             </div>
 
             {cnaeDropdownOpen && filteredCnaes.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-60 overflow-auto rounded-lg bg-white shadow-lg border">
+              <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-60 overflow-auto rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
                 {filteredCnaes.map(item => (
                   <button
                     key={item.codigo}
                     onClick={() => handleAddCnae(item)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-start gap-2"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-start gap-2"
                   >
-                    <Plus className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
+                    <Plus className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400 shrink-0 mt-0.5" />
                     <span>
-                      <span className="font-mono text-xs text-gray-500">{item.codigo}</span>
+                      <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{item.codigo}</span>
                       {' - '}
-                      <span className="text-gray-900">{item.descricao}</span>
+                      <span className="text-gray-900 dark:text-white">{item.descricao}</span>
                     </span>
                   </button>
                 ))}
@@ -358,9 +358,9 @@ export default function ConfiguracoesEmpresaPage() {
 
           {/* Lista de CNAEs cadastrados */}
           {cnaesCadastrados.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-200 p-6 text-center">
-              <p className="text-sm text-gray-500">Nenhum CNAE cadastrado</p>
-              <p className="text-xs text-gray-400 mt-1">Busque e adicione os CNAEs do cartão CNPJ da empresa</p>
+            <div className="rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 p-6 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum CNAE cadastrado</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Busque e adicione os CNAEs do cartão CNPJ da empresa</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -368,7 +368,7 @@ export default function ConfiguracoesEmpresaPage() {
                 <div
                   key={cnae.codigo}
                   className={`flex items-center gap-3 rounded-lg border p-3 ${
-                    cnae.padrao ? 'border-primary-200 bg-primary-50' : 'border-gray-200'
+                    cnae.padrao ? 'border-primary-200 bg-primary-50' : 'border-gray-200 dark:border-gray-700'
                   }`}
                 >
                   <button
@@ -376,13 +376,13 @@ export default function ConfiguracoesEmpresaPage() {
                     onClick={() => handleSetPadrao(cnae.codigo)}
                     title={cnae.padrao ? 'CNAE padrão' : 'Definir como padrão'}
                     className={`shrink-0 ${
-                      cnae.padrao ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
+                      cnae.padrao ? 'text-yellow-500' : 'text-gray-700 dark:text-gray-300 hover:text-yellow-400'
                     }`}
                   >
                     <Star className={`h-5 w-5 ${cnae.padrao ? 'fill-current' : ''}`} />
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {cnae.codigo} - {cnae.descricao}
                     </p>
                     {cnae.padrao && (
@@ -392,7 +392,7 @@ export default function ConfiguracoesEmpresaPage() {
                   <button
                     type="button"
                     onClick={() => handleRemoveCnae(cnae.codigo)}
-                    className="shrink-0 text-gray-400 hover:text-red-500"
+                    className="shrink-0 text-gray-500 dark:text-gray-400 hover:text-red-500"
                     title="Remover CNAE"
                   >
                     <X className="h-4 w-4" />
@@ -404,10 +404,10 @@ export default function ConfiguracoesEmpresaPage() {
         </div>
 
         {/* Certificado Digital */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
-            <Shield className="h-5 w-5 text-gray-500" />
-            <h2 className="font-semibold text-gray-900">Certificado Digital (A1)</h2>
+            <Shield className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">Certificado Digital (A1)</h2>
           </div>
 
           {certStatus === 'uploaded' && (
@@ -443,10 +443,10 @@ export default function ConfiguracoesEmpresaPage() {
         </div>
 
         {/* Configurações de Email */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
-            <Mail className="h-5 w-5 text-gray-500" />
-            <h2 className="font-semibold text-gray-900">{'Configurações de Email'}</h2>
+            <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">{'Configurações de Email'}</h2>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -498,17 +498,17 @@ function Toggle({ label, description, checked, onChange, disabled }: {
   label: string; description: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean;
 }) {
   return (
-    <div className={`flex items-start justify-between rounded-lg border p-4 ${disabled ? 'opacity-50' : ''}`}>
+    <div className={`flex items-start justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex-1">
-        <p className="text-sm font-medium text-gray-900">{label}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>
       </div>
       <button
         type="button"
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors
-          ${checked ? 'bg-primary-600' : 'bg-gray-200'}
+          ${checked ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'}
           ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform

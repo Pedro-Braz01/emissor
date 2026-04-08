@@ -38,18 +38,18 @@ interface ConfigTributaria {
   item_lista_servico: string;
 }
 
-// ── Classes CSS (dark theme) ─────────────────────────
-const inputCls = `w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm
-  placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`;
+// ── Classes CSS (light/dark theme) ──────────────────
+const inputCls = `w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
+  placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`;
 
-const selectCls = `w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm
+const selectCls = `w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`;
 
-const labelCls = 'block text-sm font-medium text-gray-300 mb-1';
+const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
 
-const sectionCls = 'bg-gray-800 rounded-xl border border-gray-700 p-5';
+const sectionCls = 'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5';
 
-const readonlyCls = `w-full bg-gray-600/50 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 text-sm cursor-not-allowed`;
+const readonlyCls = `w-full bg-gray-200/50 dark:bg-gray-600/50 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 text-sm cursor-not-allowed`;
 
 // ── Componente Principal ─────────────────────────────
 export default function EmitirPage() {
@@ -434,7 +434,7 @@ export default function EmitirPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-900 -m-4 lg:-m-6 p-4 lg:p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 -m-4 lg:-m-6 p-4 lg:p-6">
         <div className="mx-auto max-w-5xl space-y-6">
           {/* Header */}
           <div className="flex items-center gap-3">
@@ -442,28 +442,28 @@ export default function EmitirPage() {
               <FileText className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Emitir NFS-e</h1>
-              <p className="text-gray-400 text-sm">{empresa?.razaoSocial || 'Selecione uma empresa'}</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Emitir NFS-e</h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">{empresa?.razaoSocial || 'Selecione uma empresa'}</p>
             </div>
           </div>
 
           {/* Resultado */}
           {resultado && (
-            <div className={`flex items-start gap-3 rounded-lg border p-4 ${resultado.success ? 'border-green-500/30 bg-green-500/10' : 'border-red-500/30 bg-red-500/10'}`}>
+            <div className={`flex items-start gap-3 rounded-lg border p-4 ${resultado.success ? 'border-green-500/30 bg-green-100 dark:bg-green-500/10' : 'border-red-500/30 bg-red-100 dark:bg-red-500/10'}`}>
               {resultado.success ? (
                 <>
-                  <CheckCircle className="h-5 w-5 text-green-400 shrink-0 mt-0.5" />
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-green-400">NFSe emitida com sucesso!</p>
-                    <p className="mt-1 text-sm text-green-300">RPS: {resultado.numeroRps} | Verificação: {resultado.codigoVerificacao}</p>
+                    <p className="font-medium text-green-600 dark:text-green-400">NFSe emitida com sucesso!</p>
+                    <p className="mt-1 text-sm text-green-700 dark:text-green-300">RPS: {resultado.numeroRps} | Verificação: {resultado.codigoVerificacao}</p>
                   </div>
                 </>
               ) : (
                 <>
-                  <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-red-400">Erro na emissão</p>
-                    <p className="mt-1 text-sm text-red-300">{resultado.error}</p>
+                    <p className="font-medium text-red-600 dark:text-red-400">Erro na emissão</p>
+                    <p className="mt-1 text-sm text-red-700 dark:text-red-300">{resultado.error}</p>
                   </div>
                 </>
               )}
@@ -472,7 +472,7 @@ export default function EmitirPage() {
 
           {/* ═══════════════ DADOS DA NOTA ═══════════════ */}
           <div className={sectionCls}>
-            <h2 className="text-white font-semibold text-sm mb-4">Dados da nota</h2>
+            <h2 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Dados da nota</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={labelCls}>Modelo do documento</label>
@@ -516,7 +516,7 @@ export default function EmitirPage() {
 
           {/* ═══════════════ DADOS DO CLIENTE ═══════════════ */}
           <div className={sectionCls}>
-            <h2 className="text-white font-semibold text-sm mb-4">Dados do cliente</h2>
+            <h2 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Dados do cliente</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={labelCls}>Nome / Razão Social *</label>
@@ -545,9 +545,9 @@ export default function EmitirPage() {
                 </div>
               </div>
               <div className="flex items-end gap-4">
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={exterior} onChange={e => setExterior(e.target.checked)}
-                    className="rounded border-gray-600 bg-gray-700 text-blue-600" />
+                    className="rounded border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-blue-600" />
                   Exterior
                 </label>
                 <div className="flex-1">
@@ -612,10 +612,10 @@ export default function EmitirPage() {
                 <div className="flex gap-2 items-center">
                   <input value={tomadorEmail} onChange={e => setTomadorEmail(e.target.value)}
                     placeholder="E-mail" type="email" className={`${inputCls} flex-1`} />
-                  <label className="flex items-center gap-2 text-sm text-gray-300 shrink-0">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 shrink-0">
                     <input type="checkbox" checked={enviarParaTomador}
                       onChange={e => setEnviarParaTomador(e.target.checked)}
-                      className="rounded border-gray-600 bg-gray-700 text-blue-600" />
+                      className="rounded border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-blue-600" />
                     Enviar
                   </label>
                 </div>
@@ -625,7 +625,7 @@ export default function EmitirPage() {
 
           {/* ═══════════════ SERVIÇO ═══════════════ */}
           <div className={sectionCls}>
-            <h2 className="text-white font-semibold text-sm mb-4">Serviço</h2>
+            <h2 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Serviço</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* CNAE - Searchable dropdown */}
               <div ref={cnaeRef} className="relative">
@@ -648,19 +648,19 @@ export default function EmitirPage() {
                   className={inputCls}
                 />
                 {cnaeDropdownOpen && filteredCnaes.length > 0 && (
-                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-600 bg-gray-700 shadow-lg">
+                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-lg">
                     {filteredCnaes.map(item => (
                       <li
                         key={item.codigo}
                         onClick={() => handleSelectCnae(item)}
-                        className="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-blue-600 hover:text-white"
+                        className="cursor-pointer px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-600 hover:text-white"
                       >
                         {item.codigo} - {item.descricao}
                       </li>
                     ))}
                   </ul>
                 )}
-                <p className="text-xs text-gray-500 mt-1">Pesquise por código ou descrição. Editável manualmente.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Pesquise por código ou descrição. Editável manualmente.</p>
               </div>
 
               {/* Item LC 116/2003 - Select populated by CNAE */}
@@ -692,7 +692,7 @@ export default function EmitirPage() {
                     className={inputCls}
                   />
                 )}
-                <p className="text-xs text-gray-500 mt-1">Correlação automática pelo CNAE ou editar manualmente.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Correlação automática pelo CNAE ou editar manualmente.</p>
               </div>
 
               {/* Atividade Município - Searchable dropdown from TribMun data */}
@@ -713,19 +713,19 @@ export default function EmitirPage() {
                   className={inputCls}
                 />
                 {atividadeMunDropdownOpen && filteredAtividadesMun.length > 0 && (
-                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-600 bg-gray-700 shadow-lg">
+                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-lg">
                     {filteredAtividadesMun.map(item => (
                       <li
                         key={item.codigo}
                         onClick={() => handleSelectAtividadeMun(item)}
-                        className="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-blue-600 hover:text-white"
+                        className="cursor-pointer px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-600 hover:text-white"
                       >
                         {item.codigo} - {item.descricao} ({item.aliquota})
                       </li>
                     ))}
                   </ul>
                 )}
-                <p className="text-xs text-gray-500 mt-1">Conforme cadastro na prefeitura. Alíquota ISS preenchida automaticamente.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Conforme cadastro na prefeitura. Alíquota ISS preenchida automaticamente.</p>
               </div>
 
               {/* Código NBS - Searchable dropdown */}
@@ -746,25 +746,25 @@ export default function EmitirPage() {
                   className={inputCls}
                 />
                 {nbsDropdownOpen && filteredNbs.length > 0 && (
-                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-600 bg-gray-700 shadow-lg">
+                  <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-lg">
                     {filteredNbs.map(item => (
                       <li
                         key={item.codigo}
                         onClick={() => handleSelectNbs(item)}
-                        className="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-blue-600 hover:text-white"
+                        className="cursor-pointer px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-600 hover:text-white"
                       >
                         {item.codigo} - {item.descricao}
                       </li>
                     ))}
                   </ul>
                 )}
-                <p className="text-xs text-gray-500 mt-1">Pesquise por código ou descrição.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Pesquise por código ou descrição.</p>
               </div>
 
               <div>
                 <label className={labelCls}>Valor Total dos Serviços *</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={valorServicos}
                     onChange={e => handleValorChange(e.target.value)}
                     placeholder="0,00" className={`${inputCls} pl-10`} />
@@ -797,12 +797,12 @@ export default function EmitirPage() {
 
           {/* ═══════════════ DESCONTOS ═══════════════ */}
           <div className={sectionCls}>
-            <h2 className="text-white font-semibold text-sm mb-4">Descontos</h2>
+            <h2 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Descontos</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={labelCls}>Desconto Condicionado</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={descontoCondicionado}
                     onChange={e => setDescontoCondicionado(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -811,7 +811,7 @@ export default function EmitirPage() {
               <div>
                 <label className={labelCls}>Desconto Incondicionado</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={descontoIncondicionado}
                     onChange={e => setDescontoIncondicionado(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -820,7 +820,7 @@ export default function EmitirPage() {
               <div>
                 <label className={labelCls}>Deduções Base de Cálculo</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={deducoesBaseCalculo}
                     onChange={e => setDeducoesBaseCalculo(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -831,13 +831,13 @@ export default function EmitirPage() {
 
           {/* ═══════════════ RETENÇÕES DE IMPOSTOS ═══════════════ */}
           <div className={sectionCls}>
-            <h2 className="text-white font-semibold text-sm mb-1">Retenções de Impostos</h2>
-            <p className="text-xs text-gray-500 mb-4">Pré-preenchido das configurações tributárias. Editável por nota.</p>
+            <h2 className="text-gray-900 dark:text-white font-semibold text-sm mb-1">Retenções de Impostos</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Pré-preenchido das configurações tributárias. Editável por nota.</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <label className={labelCls}>PIS</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={retPis}
                     onChange={e => setRetPis(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -846,7 +846,7 @@ export default function EmitirPage() {
               <div>
                 <label className={labelCls}>COFINS</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={retCofins}
                     onChange={e => setRetCofins(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -855,7 +855,7 @@ export default function EmitirPage() {
               <div>
                 <label className={labelCls}>INSS</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={retInss}
                     onChange={e => setRetInss(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -864,7 +864,7 @@ export default function EmitirPage() {
               <div>
                 <label className={labelCls}>IRRF</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={retIrrf}
                     onChange={e => setRetIrrf(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -873,7 +873,7 @@ export default function EmitirPage() {
               <div>
                 <label className={labelCls}>CSLL</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={retCsll}
                     onChange={e => setRetCsll(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -882,7 +882,7 @@ export default function EmitirPage() {
               <div>
                 <label className={labelCls}>Outras Retenções</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">R$</span>
                   <input type="number" step="0.01" min="0" value={outrasRetencoes}
                     onChange={e => setOutrasRetencoes(e.target.value)}
                     className={`${inputCls} pl-10`} />
@@ -896,7 +896,7 @@ export default function EmitirPage() {
                     className={`px-5 py-2 text-sm font-medium rounded-l-lg border transition-colors ${
                       issRetido
                         ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-600'
+                        : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}>
                     Sim
                   </button>
@@ -905,7 +905,7 @@ export default function EmitirPage() {
                     className={`px-5 py-2 text-sm font-medium rounded-r-lg border-t border-r border-b transition-colors ${
                       !issRetido
                         ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-600'
+                        : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}>
                     Não
                   </button>
@@ -916,7 +916,7 @@ export default function EmitirPage() {
 
           {/* ═══════════════ TOTAIS DA NOTA FISCAL ═══════════════ */}
           <div className={sectionCls}>
-            <h2 className="text-white font-semibold text-sm mb-4">Totais da Nota Fiscal</h2>
+            <h2 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Totais da Nota Fiscal</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={labelCls}>Valor Total dos Serviços</label>
@@ -927,9 +927,9 @@ export default function EmitirPage() {
                 <input value={formatCurrency(totalIssqn)} readOnly className={readonlyCls} />
               </div>
               <div>
-                <label className={`${labelCls} text-green-400`}>Valor Líquido da NFS-e</label>
+                <label className={`${labelCls} !text-green-600 dark:!text-green-400`}>Valor Líquido da NFS-e</label>
                 <input value={formatCurrency(valorLiquido)} readOnly
-                  className={`${readonlyCls} !text-green-400 !bg-green-500/10 !border-green-500/30 font-bold text-lg`} />
+                  className={`${readonlyCls} !text-green-600 dark:!text-green-400 !bg-green-100 dark:!bg-green-500/10 !border-green-500/30 font-bold text-lg`} />
               </div>
             </div>
           </div>

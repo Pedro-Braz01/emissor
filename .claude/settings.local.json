@@ -22,7 +22,15 @@
       "Bash(ls -la /c/Users/Pedro/emissor/portal/src/app/api/*/route.ts)",
       "Bash(xargs grep:*)",
       "Bash(ls -la /c/Users/Pedro/emissor/portal/src/app/api/*/)",
-      "Bash(grep -r \"tomador_id\\\\|certificados\" /c/Users/Pedro/emissor/database --include=*.sql)"
+      "Bash(grep -r \"tomador_id\\\\|certificados\" /c/Users/Pedro/emissor/database --include=*.sql)",
+      "Bash(ls -la C:/Users/Pedro/emissor/*.json C:/Users/Pedro/emissor/*.ts C:/Users/Pedro/emissor/*.js C:/Users/Pedro/emissor/.env*)",
+      "Bash(find /c/Users/Pedro/emissor/portal/src/app/api -name \"route.ts\" -exec sh -c 'echo \"=== {} ===\" && head -20 {}' \\\\;)",
+      "Bash(xargs basename:*)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(grep -i \"credenciamento\\\\|vinculo\" /c/Users/Pedro/emissor/database/migrations/*.sql)",
+      "Bash(find /c/Users/Pedro/emissor/database -name \"*.sql\" -exec grep -l \"get_next_rps_number\" {} \\\\;)",
+      "Bash(npx --no-install tsc --noEmit --project portal/tsconfig.json)",
+      "Bash(node_modules/.bin/tsc --noEmit src/app/admin/page.tsx)"
     ]
   }
 }

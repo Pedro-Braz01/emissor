@@ -114,31 +114,31 @@ export default function AdminPage() {
 
   if (loadingAuth) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4 sticky top-0 z-20">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-20">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Painel Admin</p>
-              <p className="text-gray-500 text-xs">
+              <p className="text-gray-900 dark:text-white font-semibold text-sm">Painel Admin</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs">
                 {isMaster ? 'Master' : 'Staff'} &middot; {currentUserEmail}
               </p>
             </div>
           </div>
           <button
             onClick={() => router.push('/dashboard')}
-            className="text-gray-400 hover:text-white text-sm transition-colors"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors"
           >
             Voltar ao Dashboard
           </button>
@@ -146,7 +146,7 @@ export default function AdminPage() {
       </header>
 
       {/* Tab Navigation */}
-      <div className="bg-gray-800/50 border-b border-gray-700 sticky top-[65px] z-10">
+      <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 sticky top-[65px] z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-1">
           {visibleTabs.map(tab => (
             <button
@@ -155,7 +155,7 @@ export default function AdminPage() {
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors
                 ${activeTab === tab.key
                   ? 'border-purple-500 text-purple-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
             >
               {tab.icon}
@@ -328,20 +328,20 @@ function EmpresasTab() {
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
           <input
             type="text"
             value={busca}
             onChange={e => setBusca(e.target.value)}
             placeholder="Buscar por nome, CNPJ ou email..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm
-                       placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-gray-900 dark:text-white text-sm
+                       placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
         <select
           value={filtroStatus}
           onChange={e => setFiltroStatus(e.target.value as any)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white text-sm
                      focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <option value="todos">Todos</option>
@@ -350,8 +350,8 @@ function EmpresasTab() {
         </select>
         <button
           onClick={loadEmpresas}
-          className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-300
-                     hover:bg-gray-700 transition-colors text-sm"
+          className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-700 dark:text-gray-300
+                     hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
         >
           <RefreshCw className="w-4 h-4" />
           Atualizar
@@ -360,7 +360,7 @@ function EmpresasTab() {
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       )}
 
@@ -371,8 +371,8 @@ function EmpresasTab() {
         </div>
       ) : filtradas.length === 0 ? (
         <div className="text-center py-12">
-          <Building2 className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-500">Nenhuma empresa encontrada</p>
+          <Building2 className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400">Nenhuma empresa encontrada</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -381,13 +381,13 @@ function EmpresasTab() {
             const expanded = expandedId === empresa.id;
 
             return (
-              <div key={empresa.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+              <div key={empresa.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-5 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className={`w-3 h-3 rounded-full shrink-0 ${ativa ? 'bg-green-400' : 'bg-red-400'}`} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-white font-medium text-sm truncate">{empresa.razao_social}</p>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-900 dark:text-white font-medium text-sm truncate">{empresa.razao_social}</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">
                         {formatCpfCnpj(empresa.cnpj)} &middot; {empresa.total_notas} notas &middot; Desde{' '}
                         {formatDate(empresa.created_at)}
                       </p>
@@ -399,8 +399,8 @@ function EmpresasTab() {
                       className={`text-xs px-2.5 py-1 rounded-full border font-medium
                       ${
                         ativa
-                          ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                          : 'bg-red-500/10 text-red-400 border-red-500/20'
+                          ? 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-500/20'
+                          : 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20'
                       }`}
                     >
                       {ativa ? 'Ativa' : 'Inativa'}
@@ -412,8 +412,8 @@ function EmpresasTab() {
                       className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50
                         ${
                           ativa
-                            ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
-                            : 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
+                            ? 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20'
+                            : 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-500/20 border border-green-200 dark:border-green-500/20'
                         }`}
                     >
                       {toggling === empresa.id ? '...' : ativa ? 'Desativar' : 'Ativar'}
@@ -421,7 +421,7 @@ function EmpresasTab() {
 
                     <button
                       onClick={() => setExpandedId(expanded ? null : empresa.id)}
-                      className="text-gray-500 hover:text-white transition-colors"
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                     </button>
@@ -483,44 +483,44 @@ function EmpresaExpandedSection({
   const edit = editLicenca[empresa.id];
 
   return (
-    <div className="px-5 pb-4 pt-0 border-t border-gray-700 mt-0">
+    <div className="px-5 pb-4 pt-0 border-t border-gray-200 dark:border-gray-700 mt-0">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-sm">
         <div>
-          <p className="text-gray-500 text-xs">Email</p>
-          <p className="text-gray-300">{empresa.email_empresa || '-'}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs">Email</p>
+          <p className="text-gray-700 dark:text-gray-300">{empresa.email_empresa || '-'}</p>
         </div>
         <div>
-          <p className="text-gray-500 text-xs">Telefone</p>
-          <p className="text-gray-300">{empresa.telefone || '-'}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs">Telefone</p>
+          <p className="text-gray-700 dark:text-gray-300">{empresa.telefone || '-'}</p>
         </div>
         <div>
-          <p className="text-gray-500 text-xs">Regime</p>
-          <p className="text-gray-300">{empresa.regime_tributario.replace(/_/g, ' ')}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs">Regime</p>
+          <p className="text-gray-700 dark:text-gray-300">{empresa.regime_tributario.replace(/_/g, ' ')}</p>
         </div>
         <div>
-          <p className="text-gray-500 text-xs">IM</p>
-          <p className="text-gray-300">{empresa.inscricao_municipal}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs">IM</p>
+          <p className="text-gray-700 dark:text-gray-300">{empresa.inscricao_municipal}</p>
         </div>
         <div>
-          <p className="text-gray-500 text-xs">Total Notas</p>
-          <p className="text-gray-300">{empresa.total_notas}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs">Total Notas</p>
+          <p className="text-gray-700 dark:text-gray-300">{empresa.total_notas}</p>
         </div>
       </div>
 
       {/* Editable Licenca Section */}
-      <div className="border-t border-gray-700 mt-4 pt-4">
-        <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-3">
+      <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-3">
           Licenca
         </p>
         {edit && (
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-gray-500 text-xs mb-1">Plano</label>
+                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Plano</label>
                 <select
                   value={edit.plano}
                   onChange={e => updateEditLicenca(empresa.id, 'plano', e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                  className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
                              focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="basico">Basico</option>
@@ -529,23 +529,23 @@ function EmpresaExpandedSection({
                 </select>
               </div>
               <div>
-                <label className="block text-gray-500 text-xs mb-1">Limite Notas/Mes</label>
+                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Limite Notas/Mes</label>
                 <input
                   type="number"
                   min={0}
                   value={edit.notas_mes_limite}
                   onChange={e => updateEditLicenca(empresa.id, 'notas_mes_limite', parseInt(e.target.value) || 0)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                  className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
                              focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
               <div>
-                <label className="block text-gray-500 text-xs mb-1">Expiracao</label>
+                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Expiracao</label>
                 <input
                   type="date"
                   value={edit.data_expiracao}
                   onChange={e => updateEditLicenca(empresa.id, 'data_expiracao', e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                  className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
                              focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -560,7 +560,7 @@ function EmpresaExpandedSection({
                 {savingLicenca === empresa.id ? 'Salvando...' : 'Salvar Licenca'}
               </button>
               {licencaSuccess === empresa.id && (
-                <span className="text-green-400 text-sm">Salvo com sucesso!</span>
+                <span className="text-green-600 dark:text-green-400 text-sm">Salvo com sucesso!</span>
               )}
             </div>
           </div>
@@ -785,14 +785,14 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
       {/* Actions bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
           <input
             type="text"
             value={busca}
             onChange={e => setBusca(e.target.value)}
             placeholder="Buscar por email ou empresa..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm
-                       placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-gray-900 dark:text-white text-sm
+                       placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
         <button
@@ -805,8 +805,8 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
         </button>
         <button
           onClick={loadData}
-          className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-300
-                     hover:bg-gray-700 transition-colors text-sm"
+          className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-700 dark:text-gray-300
+                     hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
         >
           <RefreshCw className="w-4 h-4" />
           Atualizar
@@ -815,7 +815,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       )}
 
@@ -826,8 +826,8 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
         </div>
       ) : filtrados.length === 0 ? (
         <div className="text-center py-12">
-          <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-500">Nenhum usuario encontrado</p>
+          <Users className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400">Nenhum usuario encontrado</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -836,7 +836,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
             const allInactive = user.perfis.length > 0 && user.perfis.every(p => !p.ativo);
 
             return (
-              <div key={user.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+              <div key={user.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-5 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div
@@ -845,8 +845,8 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                       }`}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-white font-medium text-sm truncate">{user.email}</p>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-900 dark:text-white font-medium text-sm truncate">{user.email}</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">
                         {user.perfis.length} empresa{user.perfis.length !== 1 ? 's' : ''} vinculada
                         {user.perfis.length !== 1 ? 's' : ''} &middot; Criado em {formatDate(user.created_at)}
                       </p>
@@ -869,7 +869,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                       </span>
                     ))}
                     {user.perfis.length > 2 && (
-                      <span className="text-xs text-gray-500 hidden sm:inline-block">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline-block">
                         +{user.perfis.length - 2}
                       </span>
                     )}
@@ -878,7 +878,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                     {isMaster && (
                       <button
                         onClick={() => setResetPasswordUser(user)}
-                        className="p-1.5 rounded-lg text-gray-500 hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors"
+                        className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors"
                         title="Resetar senha"
                       >
                         <KeyRound className="w-4 h-4" />
@@ -887,7 +887,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
 
                     <button
                       onClick={() => setExpandedId(expanded ? null : user.id)}
-                      className="text-gray-500 hover:text-white transition-colors"
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                     </button>
@@ -895,13 +895,13 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                 </div>
 
                 {expanded && (
-                  <div className="px-5 pb-4 border-t border-gray-700">
+                  <div className="px-5 pb-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="pt-4 space-y-2">
-                      <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-3">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-3">
                         Perfis vinculados
                       </p>
                       {user.perfis.length === 0 ? (
-                        <p className="text-gray-500 text-sm">Nenhum perfil vinculado</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhum perfil vinculado</p>
                       ) : (
                         <div className="space-y-2">
                           {user.perfis.map((perfil, idx) => {
@@ -909,7 +909,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                             return (
                               <div
                                 key={idx}
-                                className="flex items-center justify-between bg-gray-900/50 rounded-lg px-4 py-3"
+                                className="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 rounded-lg px-4 py-3"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
                                   <div
@@ -918,10 +918,10 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                                     }`}
                                   />
                                   <div className="min-w-0">
-                                    <p className="text-gray-200 text-sm truncate">
+                                    <p className="text-gray-700 dark:text-gray-200 text-sm truncate">
                                       {perfil.razao_social || perfil.empresa_id}
                                     </p>
-                                    <p className="text-gray-500 text-xs">
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">
                                       {roleLabel(perfil.role)} &middot;{' '}
                                       {perfil.ativo ? 'Ativo' : 'Inativo'}
                                     </p>
@@ -935,8 +935,8 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                                     className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50
                                       ${
                                         perfil.ativo
-                                          ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
-                                          : 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
+                                          ? 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20'
+                                          : 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-500/20 border border-green-200 dark:border-green-500/20'
                                       }`}
                                   >
                                     {perfil.ativo ? (
@@ -950,7 +950,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                                     onClick={() => removerPerfil(user.id, perfil.empresa_id)}
                                     disabled={togglingPerfil === key}
                                     className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50
-                                      bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                                      bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20"
                                     title="Remover perfil"
                                   >
                                     <Trash2 className="w-3 h-3" />
@@ -964,15 +964,15 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
 
                       {/* Vincular a Empresa */}
                       {vincularUserId === user.id ? (
-                        <div className="bg-gray-900/50 rounded-lg px-4 py-3 mt-3 space-y-3">
-                          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">
+                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg px-4 py-3 mt-3 space-y-3">
+                          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">
                             Vincular a Empresa
                           </p>
                           <div className="flex flex-col sm:flex-row gap-2">
                             <select
                               value={vincularEmpresaId}
                               onChange={e => setVincularEmpresaId(e.target.value)}
-                              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                              className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
                                          focus:outline-none focus:ring-2 focus:ring-purple-500"
                             >
                               <option value="">Selecionar empresa...</option>
@@ -987,7 +987,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                             <select
                               value={vincularRole}
                               onChange={e => setVincularRole(e.target.value)}
-                              className="w-full sm:w-36 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                              className="w-full sm:w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
                                          focus:outline-none focus:ring-2 focus:ring-purple-500"
                             >
                               <option value="emissor">Emissor</option>
@@ -1009,7 +1009,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                                   setVincularEmpresaId('');
                                   setVincularRole('emissor');
                                 }}
-                                className="text-gray-400 hover:text-white px-3 py-2 text-sm transition-colors"
+                                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 text-sm transition-colors"
                               >
                                 Cancelar
                               </button>
@@ -1027,11 +1027,11 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                       )}
 
                       {/* Excluir Usuario */}
-                      <div className="pt-3 mt-3 border-t border-gray-700">
+                      <div className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-700">
                         <button
                           onClick={() => excluirUsuario(user.id)}
                           disabled={deletingUserId === user.id}
-                          className="flex items-center gap-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                          className="flex items-center gap-2 bg-red-100 dark:bg-red-600/10 hover:bg-red-200 dark:hover:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
                         >
                           <Trash2 className="w-4 h-4" />
                           {deletingUserId === user.id ? 'Excluindo...' : 'Excluir Usuario'}
@@ -1151,12 +1151,12 @@ function ConfiguracoesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-        <h3 className="text-white font-medium text-sm mb-4">Selecione uma empresa para ver configuracoes</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-gray-900 dark:text-white font-medium text-sm mb-4">Selecione uma empresa para ver configuracoes</h3>
         <select
           value={selectedEmpresa}
           onChange={e => handleSelect(e.target.value)}
-          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm
+          className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white text-sm
                      focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <option value="">-- Selecionar empresa --</option>
@@ -1170,7 +1170,7 @@ function ConfiguracoesTab() {
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       )}
 
@@ -1181,8 +1181,8 @@ function ConfiguracoesTab() {
       )}
 
       {config && !loadingConfig && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-6">
-          <h3 className="text-white font-semibold text-base mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+          <h3 className="text-gray-900 dark:text-white font-semibold text-base mb-2">
             {config.razao_social}
           </h3>
 
@@ -1200,8 +1200,8 @@ function ConfiguracoesTab() {
           {/* Licenca details */}
           {config.licenca && (
             <>
-              <div className="border-t border-gray-700 pt-4">
-                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-3">Licenca</p>
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-3">Licenca</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <ConfigField
                     label="Status"
@@ -1311,10 +1311,10 @@ function CreateUserModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-white font-semibold">Novo Usuario</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-gray-900 dark:text-white font-semibold">Novo Usuario</h2>
+          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1322,40 +1322,40 @@ function CreateUserModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{error}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
           )}
 
           <div>
-            <label className="block text-gray-400 text-xs font-medium mb-1.5">Email</label>
+            <label className="block text-gray-500 dark:text-gray-400 text-xs font-medium mb-1.5">Email</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="usuario@exemplo.com"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm
-                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white text-sm
+                         placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
             />
           </div>
 
           <div>
-            <label className="block text-gray-400 text-xs font-medium mb-1.5">Senha</label>
+            <label className="block text-gray-500 dark:text-gray-400 text-xs font-medium mb-1.5">Senha</label>
             <div className="relative">
               <input
                 type={showSenha ? 'text' : 'password'}
                 value={senha}
                 onChange={e => setSenha(e.target.value)}
                 placeholder="Minimo 6 caracteres"
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 pr-10 text-white text-sm
-                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 pr-10 text-gray-900 dark:text-white text-sm
+                           placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
                 minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowSenha(!showSenha)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {showSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -1365,19 +1365,19 @@ function CreateUserModal({
           {/* Perfis */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-gray-400 text-xs font-medium">Empresas vinculadas</label>
+              <label className="text-gray-500 dark:text-gray-400 text-xs font-medium">Empresas vinculadas</label>
               <button
                 type="button"
                 onClick={addPerfil}
                 disabled={perfis.length >= 20}
-                className="text-xs text-purple-400 hover:text-purple-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                className="text-xs text-purple-400 hover:text-purple-300 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed"
               >
                 + Adicionar empresa
               </button>
             </div>
 
             {perfis.length === 0 && (
-              <p className="text-gray-500 text-xs">
+              <p className="text-gray-500 dark:text-gray-400 text-xs">
                 Clique em &quot;+ Adicionar empresa&quot; para vincular
               </p>
             )}
@@ -1388,7 +1388,7 @@ function CreateUserModal({
                   <select
                     value={perfil.empresa_id}
                     onChange={e => updatePerfil(idx, 'empresa_id', e.target.value)}
-                    className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                    className="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
                                focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="">Selecionar empresa...</option>
@@ -1401,7 +1401,7 @@ function CreateUserModal({
                   <select
                     value={perfil.role}
                     onChange={e => updatePerfil(idx, 'role', e.target.value)}
-                    className="w-36 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm
+                    className="w-36 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm
                                focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     {availableRoles.map(r => (
@@ -1413,7 +1413,7 @@ function CreateUserModal({
                   <button
                     type="button"
                     onClick={() => removePerfil(idx)}
-                    className="p-2 text-gray-500 hover:text-red-400 transition-colors"
+                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1427,7 +1427,7 @@ function CreateUserModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg py-2.5 text-sm font-medium transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg py-2.5 text-sm font-medium transition-colors"
             >
               Cancelar
             </button>
@@ -1496,10 +1496,10 @@ function ResetPasswordModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-white font-semibold">Resetar Senha</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-gray-900 dark:text-white font-semibold">Resetar Senha</h2>
+          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1507,31 +1507,31 @@ function ResetPasswordModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{error}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
           )}
 
           {success && (
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-              <p className="text-green-400 text-sm">Senha resetada com sucesso!</p>
+              <p className="text-green-600 dark:text-green-400 text-sm">Senha resetada com sucesso!</p>
             </div>
           )}
 
-          <div className="bg-gray-900/50 rounded-lg px-4 py-3">
-            <p className="text-gray-400 text-xs">Usuario</p>
-            <p className="text-white text-sm">{user.email}</p>
+          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg px-4 py-3">
+            <p className="text-gray-500 dark:text-gray-400 text-xs">Usuario</p>
+            <p className="text-gray-900 dark:text-white text-sm">{user.email}</p>
           </div>
 
           <div>
-            <label className="block text-gray-400 text-xs font-medium mb-1.5">Nova Senha</label>
+            <label className="block text-gray-500 dark:text-gray-400 text-xs font-medium mb-1.5">Nova Senha</label>
             <div className="relative">
               <input
                 type={showSenha ? 'text' : 'password'}
                 value={novaSenha}
                 onChange={e => setNovaSenha(e.target.value)}
                 placeholder="Minimo 6 caracteres"
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 pr-10 text-white text-sm
-                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 pr-10 text-gray-900 dark:text-white text-sm
+                           placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
                 minLength={6}
                 disabled={success}
@@ -1539,7 +1539,7 @@ function ResetPasswordModal({
               <button
                 type="button"
                 onClick={() => setShowSenha(!showSenha)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {showSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -1550,7 +1550,7 @@ function ResetPasswordModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg py-2.5 text-sm font-medium transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg py-2.5 text-sm font-medium transition-colors"
             >
               Cancelar
             </button>
@@ -1578,8 +1578,8 @@ function StatCard({ label, value, color }: { label: string; value: number; color
   };
   return (
     <div className={`rounded-xl border p-4 ${colors[color]}`}>
-      <p className="text-gray-400 text-xs mb-1">{label}</p>
-      <p className="text-white font-bold text-2xl">{value}</p>
+      <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">{label}</p>
+      <p className="text-gray-900 dark:text-white font-bold text-2xl">{value}</p>
     </div>
   );
 }
@@ -1594,14 +1594,14 @@ function ConfigField({
   highlight?: 'green' | 'red';
 }) {
   const textColor = highlight === 'green'
-    ? 'text-green-400'
+    ? 'text-green-600 dark:text-green-400'
     : highlight === 'red'
-      ? 'text-red-400'
-      : 'text-gray-200';
+      ? 'text-red-600 dark:text-red-400'
+      : 'text-gray-700 dark:text-gray-200';
 
   return (
-    <div className="bg-gray-900/50 rounded-lg px-4 py-3">
-      <p className="text-gray-500 text-xs mb-0.5">{label}</p>
+    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg px-4 py-3">
+      <p className="text-gray-500 dark:text-gray-400 text-xs mb-0.5">{label}</p>
       <p className={`text-sm font-medium ${textColor}`}>{value}</p>
     </div>
   );

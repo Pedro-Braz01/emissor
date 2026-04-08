@@ -32,15 +32,90 @@ export async function POST(request: Request) {
   }
 
   const admin = getAdminClient();
+  const cnpjLimpo = body.cnpj.replace(/\D/g, '');
 
-  // 1. Cria usuário no Supabase Auth via admin API (sem exigir confirmação de email)
+  // ── Verifica se CNPJ já existe ──
+  const { data: empresaExistente } = await admin
+    .from('empresas')
+    .select('id, razao_social, email_empresa')
+    .eq('cnpj', cnpjLimpo)
+    .single();
+
+  if (empresaExistente) {
+    // CNPJ já cadastrado — cria solicitação de vínculo
+    // Verifica se já existe solicitação pendente deste email
+    const { data: solicitacaoExistente } = await admin
+      .from('solicitacoes_vinculo')
+      .select('id')
+      .eq('empresa_id', empresaExistente.id)
+      .eq('email_solicitante', body.email)
+      .eq('status', 'pendente')
+      .single();
+
+    if (!solicitacaoExistente) {
+      // Cria solicitação de vínculo
+      await admin
+        .from('solicitacoes_vinculo')
+        .insert({
+          empresa_id: empresaExistente.id,
+          email_solicitante: body.email,
+          nome_solicitante: body.razao_social,
+        });
+
+      // Envia email de notificação para o email da empresa
+      const emailDestino = empresaExistente.email_empresa;
+      if (emailDestino) {
+        try {
+          // Usa o Supabase Auth para enviar email via SMTP configurado
+          // Alternativa: envia via edge function ou resend
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+          const serviceKey = process.env.SUPABASE_SERVICE_KEY!;
+
+          await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: emailDestino,
+              subject: 'Solicitação de acesso ao emissor NFSe',
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <h2 style="color: #2563eb;">Solicitação de Vínculo</h2>
+                  <p>O usuário <strong>${body.email}</strong> está solicitando acesso à empresa <strong>${empresaExistente.razao_social}</strong> no sistema emissor de NFS-e.</p>
+                  <p>Para aprovar ou rejeitar esta solicitação, acesse o painel do sistema em <strong>Configurações > Usuários</strong>.</p>
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+                  <p style="color: #6b7280; font-size: 12px;">Este é um email automático do Emissor NFSe.</p>
+                </div>
+              `,
+            }),
+          }).catch(() => {
+            // Silencia erro de envio — a solicitação já foi salva no banco
+            console.warn('Aviso: não foi possível enviar email de notificação de vínculo');
+          });
+        } catch {
+          // Silencia — email é best-effort
+        }
+      }
+    }
+
+    return NextResponse.json(
+      { error: 'Esta empresa já possui cadastro. Uma solicitação de acesso foi enviada ao responsável.' },
+      { status: 409 }
+    );
+  }
+
+  // ── Fluxo normal: CNPJ novo ──
+
+  // 1. Cria usuário no Supabase Auth via admin API
   const { data: authData, error: authError } = await admin.auth.admin.createUser({
     email: body.email,
     password: body.senha,
-    email_confirm: true, // confirma automaticamente — email de boas-vindas é enviado pelo Supabase
+    email_confirm: true,
     user_metadata: {
       razao_social: body.razao_social,
-      cnpj: body.cnpj.replace(/\D/g, ''),
+      cnpj: cnpjLimpo,
     },
   });
 
@@ -53,12 +128,12 @@ export async function POST(request: Request) {
 
   const userId = authData.user.id;
 
-  // 2. Cria empresa com service_role (bypassa RLS — user ainda sem sessão ativa)
+  // 2. Cria empresa com service_role (bypassa RLS)
   const { data: empresa, error: empresaError } = await admin
     .from('empresas')
     .insert({
       user_id: userId,
-      cnpj: body.cnpj.replace(/\D/g, ''),
+      cnpj: cnpjLimpo,
       razao_social: body.razao_social,
       nome_fantasia: body.nome_fantasia || null,
       inscricao_municipal: body.inscricao_municipal,
@@ -72,7 +147,7 @@ export async function POST(request: Request) {
     .single();
 
   if (empresaError) {
-    // Rollback: remove usuário criado para não deixar órfão
+    // Rollback: remove usuário criado
     await admin.auth.admin.deleteUser(userId);
 
     if (empresaError.message.includes('duplicate') || empresaError.message.includes('unique')) {
@@ -86,7 +161,7 @@ export async function POST(request: Request) {
   //    - licencas (license_active: true, plano: basico)
   //    - perfis_usuarios (role: owner)
   //
-  //    Agora ajustamos a licença para pendente (aguarda confirmação de pagamento)
+  //    Agora ajustamos a licença para pendente (aguarda pagamento)
   await admin
     .from('licencas')
     .update({ license_active: false })

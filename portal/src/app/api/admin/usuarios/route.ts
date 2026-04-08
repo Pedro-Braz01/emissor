@@ -103,10 +103,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Pelo menos um perfil (empresa_id + role) e obrigatorio' }, { status: 400 });
   }
 
-  if (perfis.length > 20) {
-    return NextResponse.json({ error: 'Maximo de 20 empresas por usuario' }, { status: 400 });
-  }
-
   // Staff cannot assign super_admin role
   if (!adminInfo.isMaster) {
     const hasSuperAdmin = perfis.some((p: any) => p.role === 'super_admin');

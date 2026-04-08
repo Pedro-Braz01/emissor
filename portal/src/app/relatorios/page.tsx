@@ -326,8 +326,8 @@ export default function RelatoriosPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Livro Fiscal</h1>
-            <p className="mt-1 text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Livro Fiscal</h1>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">
               Relatorio de notas fiscais emitidas no periodo
             </p>
           </div>
@@ -360,14 +360,14 @@ export default function RelatoriosPage() {
         </div>
 
         {/* Filtros de data */}
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
           <div className="grid gap-4 md:grid-cols-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Data Inicio
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 <input
                   type="date"
                   className="input pl-9"
@@ -377,11 +377,11 @@ export default function RelatoriosPage() {
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Data Fim
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 <input
                   type="date"
                   className="input pl-9"
@@ -408,15 +408,15 @@ export default function RelatoriosPage() {
         </div>
 
         {/* Tabela */}
-        <div className="rounded-xl border bg-white shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
             </div>
           ) : notas.length === 0 ? (
             <div className="py-12 text-center">
-              <FileText className="mx-auto h-12 w-12 text-gray-300" />
-              <p className="mt-4 text-gray-500">
+              <FileText className="mx-auto h-12 w-12 text-gray-700 dark:text-gray-300" />
+              <p className="mt-4 text-gray-500 dark:text-gray-400">
                 Nenhuma nota encontrada no periodo selecionado
               </p>
             </div>
@@ -424,7 +424,7 @@ export default function RelatoriosPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-sm font-medium text-gray-500">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
                     <th className="px-4 py-3">NFSe</th>
                     <th className="px-4 py-3">Data Emissao</th>
                     <th className="px-4 py-3">Tomador</th>
@@ -435,7 +435,7 @@ export default function RelatoriosPage() {
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {notas.map((nota) => {
                     const statusColor =
                       statusColors[nota.status] || statusColors.RASCUNHO;
@@ -443,39 +443,39 @@ export default function RelatoriosPage() {
                     const valorLiquido = getValorLiquido(nota);
 
                     return (
-                      <tr key={nota.id} className="hover:bg-gray-50">
+                      <tr key={nota.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-gray-900 dark:text-white">
                             {nota.numero_nfse || '-'}
                           </p>
                         </td>
-                        <td className="px-4 py-3 text-gray-900">
+                        <td className="px-4 py-3 text-gray-900 dark:text-white">
                           {formatDate(nota.data_emissao)}
                         </td>
                         <td className="px-4 py-3">
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-white">
                               {nota.tomador_razao_social || '-'}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               {nota.tomador_cnpj_cpf
                                 ? formatCpfCnpj(nota.tomador_cnpj_cpf)
                                 : '-'}
                             </p>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
                           {formatCurrency(Number(nota.valor_servicos))}
                         </td>
-                        <td className="px-4 py-3 text-right text-gray-900">
+                        <td className="px-4 py-3 text-right text-gray-900 dark:text-white">
                           {formatCurrency(retencoes)}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
                           {formatCurrency(valorLiquido)}
                         </td>
                         <td className="px-4 py-3">
                           <p
-                            className="max-w-[120px] truncate text-sm text-gray-600"
+                            className="max-w-[120px] truncate text-sm text-gray-600 dark:text-gray-400"
                             title={userMap[nota.created_by] || nota.created_by}
                           >
                             {getUserDisplay(nota.created_by)}
@@ -502,26 +502,26 @@ export default function RelatoriosPage() {
 
           {/* Summary totals */}
           {notas.length > 0 && (
-            <div className="border-t bg-gray-50 px-4 py-4">
+            <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
               <div className="grid gap-4 sm:grid-cols-4">
-                <div className="rounded-lg bg-white p-3 shadow-sm">
-                  <p className="text-sm text-gray-500">Total de Notas</p>
-                  <p className="text-lg font-bold text-gray-900">{totalNotas}</p>
+                <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total de Notas</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">{totalNotas}</p>
                 </div>
-                <div className="rounded-lg bg-white p-3 shadow-sm">
-                  <p className="text-sm text-gray-500">Total Valor Bruto</p>
-                  <p className="text-lg font-bold text-gray-900">
+                <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Valor Bruto</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
                     {formatCurrency(totalBruto)}
                   </p>
                 </div>
-                <div className="rounded-lg bg-white p-3 shadow-sm">
-                  <p className="text-sm text-gray-500">Total Retencoes</p>
+                <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Retencoes</p>
                   <p className="text-lg font-bold text-red-600">
                     {formatCurrency(totalRetencoes)}
                   </p>
                 </div>
-                <div className="rounded-lg bg-white p-3 shadow-sm">
-                  <p className="text-sm text-gray-500">Total Valor Liquido</p>
+                <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Valor Liquido</p>
                   <p className="text-lg font-bold text-green-600">
                     {formatCurrency(totalLiquido)}
                   </p>

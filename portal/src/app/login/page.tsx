@@ -29,7 +29,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
         {/* Logo */}
@@ -40,13 +40,13 @@ export default function LoginPage() {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white">Emissor NFSe</h1>
-          <p className="text-gray-400 text-sm mt-1">Ribeirão Preto · ABRASF 2.04</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Emissor NFSe</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Ribeirão Preto · ABRASF 2.04</p>
         </div>
 
         {/* Card */}
-        <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-xl">
-          <h2 className="text-lg font-semibold text-white mb-6">Entrar na sua conta</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Entrar na sua conta</h2>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-5">
@@ -63,7 +63,7 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 placeholder="seu@email.com"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                 onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 placeholder="••••••••"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500
+                className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
@@ -101,7 +101,7 @@ export default function LoginPage() {
         </div>
 
         <div className="text-center mt-6 space-y-2">
-          <a href="/forgot-password" className="block text-gray-400 hover:text-white text-sm transition-colors">
+          <a href="/forgot-password" className="block text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">
             Esqueceu sua senha?
           </a>
           <p className="text-gray-600 text-xs">
