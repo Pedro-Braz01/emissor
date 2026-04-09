@@ -65,6 +65,7 @@ export default function ConfiguracoesEmpresaPage() {
   const [certFile, setCertFile] = useState<File | null>(null);
   const [certSenha, setCertSenha] = useState('');
   const [certStatus, setCertStatus] = useState<'none' | 'uploaded' | 'error'>('none');
+  const [certInfo, setCertInfo] = useState<{ subject: string; validade: string } | null>(null);
 
   // RPS / Nota numeracao
   const [ultimoRps, setUltimoRps] = useState<number | null>(null);
@@ -123,8 +124,22 @@ export default function ConfiguracoesEmpresaPage() {
       setEndereco(data.endereco_completo || '');
       setEnvioAutoContador((data as any).envio_auto_contador ?? false);
       setEnvioAutoEmissor((data as any).envio_auto_emissor ?? false);
-      setCertStatus((data as any).certificado_digital_encrypted ? 'uploaded' : 'none');
       setCnaesCadastrados((data as any).cnaes_cadastrados || []);
+
+      // Busca certificado ativo na tabela certificados
+      const { data: certData } = await supabase
+        .from('certificados')
+        .select('id, subject, validade, ativo')
+        .eq('empresa_id', empresa.id)
+        .eq('ativo', true)
+        .single();
+      if (certData) {
+        setCertStatus('uploaded');
+        setCertInfo({ subject: certData.subject || '', validade: certData.validade || '' });
+      } else {
+        setCertStatus('none');
+        setCertInfo(null);
+      }
       setSerieRps((data as any).serie_rps || '1');
       setUltimoRpsPrefeitura((data as any).ultimo_rps_prefeitura ?? null);
 
@@ -236,14 +251,13 @@ export default function ConfiguracoesEmpresaPage() {
       const data = await res.json();
 
       if (data.success) {
-        if (data.rpsPrefeitura) {
-          setUltimoRpsPrefeitura(data.rpsPrefeitura - 1);
-        }
+        // Atualiza os cards com dados retornados
+        if (data.ultimoRpsLocal !== undefined) setUltimoRps(data.ultimoRpsLocal);
+        if (data.ultimoRpsPrefeitura !== undefined) setUltimoRpsPrefeitura(data.ultimoRpsPrefeitura);
+        if (data.ultimaNfse !== undefined) setUltimaNotaEmitida(data.ultimaNfse);
         setRpsMessage(data.message);
-        // Recarrega dados da empresa
-        await loadEmpresaData();
       } else {
-        setRpsMessage(data.error || 'Erro ao consultar prefeitura');
+        setRpsMessage(data.error || 'Erro ao consultar');
       }
     } catch (err: any) {
       setRpsMessage(err.message || 'Erro de conexao');
@@ -476,9 +490,17 @@ export default function ConfiguracoesEmpresaPage() {
           </div>
 
           {certStatus === 'uploaded' && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-3">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <p className="text-sm text-green-700">Certificado configurado</p>
+            <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">Certificado configurado</p>
+              </div>
+              {certInfo && (
+                <div className="mt-2 text-xs text-green-600 dark:text-green-400 space-y-0.5">
+                  <p><span className="font-medium">Titular:</span> {certInfo.subject}</p>
+                  <p><span className="font-medium">Validade:</span> {new Date(certInfo.validade).toLocaleDateString('pt-BR')}</p>
+                </div>
+              )}
             </div>
           )}
 
