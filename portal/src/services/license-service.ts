@@ -7,6 +7,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getServiceRoleKey } from '@/lib/supabase-server';
 
 // ===================
 // TIPOS
@@ -305,7 +306,7 @@ export function getLicenseService(): LicenseService {
   if (!instance) {
     instance = new LicenseService(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
+      getServiceRoleKey()
     );
   }
   return instance;

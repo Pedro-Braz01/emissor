@@ -34,7 +34,8 @@
       "Bash(find /c/Users/Pedro/emissor/portal/src -name \"*.tsx\" -type f -exec grep -l \"notaId\\\\|download.*route\\\\|tipo.*pdf\" {} \\\\;)",
       "Bash(grep -n \"ADD COLUMN\" \"C:\\\\Users\\\\Pedro\\\\emissor\\\\database\\\\migrations\"/*)",
       "Bash(find \"C:\\\\Users\\\\Pedro\\\\emissor\\\\database\" -name \"*.sql\" -exec grep -l \"serie_rps\\\\|regime_especial\\\\|optante_simples\\\\|incentivo_fiscal\" {} \\\\;)",
-      "Bash(grep -r \"SUPABASE_URL\\\\|NEXT_PUBLIC_SUPABASE\" .env*)"
+      "Bash(grep -r \"SUPABASE_URL\\\\|NEXT_PUBLIC_SUPABASE\" .env*)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")"
     ]
   }
 }

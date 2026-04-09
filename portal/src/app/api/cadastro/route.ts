@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getServiceRoleKey } from '@/lib/supabase-server';
 import { z } from 'zod';
 
 // Service-role client — bypassa RLS completamente
 function getAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
+    getServiceRoleKey(),
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
           // Usa o Supabase Auth para enviar email via SMTP configurado
           // Alternativa: envia via edge function ou resend
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-          const serviceKey = process.env.SUPABASE_SERVICE_KEY!;
+          const serviceKey = getServiceRoleKey();
 
           await fetch(`${supabaseUrl}/functions/v1/send-email`, {
             method: 'POST',

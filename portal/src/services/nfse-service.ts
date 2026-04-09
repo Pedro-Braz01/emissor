@@ -107,11 +107,10 @@ export class NfseService {
           )
         `)
         .eq('id', input.empresaId)
-        .eq('ativo', true)
         .single();
 
       if (empresaError || !empresa) {
-        return { success: false, error: 'Empresa não encontrada ou inativa' };
+        return { success: false, error: 'Empresa não encontrada' };
       }
 
       // 2. Verifica certificado

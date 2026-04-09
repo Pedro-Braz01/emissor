@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createServerSupabaseClient, getServiceRoleKey } from '@/lib/supabase-server';
 import { createNfseService } from '@/services/nfse-service';
 import { headers } from 'next/headers';
 import * as XLSX from 'xlsx';
@@ -171,7 +171,7 @@ export async function POST(request: Request) {
 
   // Emite cada nota individualmente
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY!;
+  const supabaseKey = getServiceRoleKey();
   const encryptionKey = process.env.ENCRYPTION_KEY;
   if (!encryptionKey) {
     return NextResponse.json({ error: 'Chave de criptografia não configurada. Defina ENCRYPTION_KEY.' }, { status: 500 });

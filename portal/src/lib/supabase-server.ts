@@ -50,6 +50,18 @@ export function createServerSupabaseClient() {
   );
 }
 
+/**
+ * Retorna a service_role key do Supabase.
+ * Compatível com ambos os nomes:
+ * - SUPABASE_SERVICE_ROLE_KEY (definido pela integração Vercel+Supabase)
+ * - SUPABASE_SERVICE_KEY (nome usado no .env local)
+ */
+export function getServiceRoleKey(): string {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY ou SUPABASE_SERVICE_KEY não configurada');
+  return key;
+}
+
 // Helpers rápidos para uso em Server Components
 // NOTA: getUser() é preferível a getSession() por segurança —
 // getUser() valida o token com o servidor Supabase, enquanto
