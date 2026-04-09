@@ -758,9 +758,9 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
   const roleLabel = (role: string) => {
     const map: Record<string, string> = {
       super_admin: 'Super Admin',
+      owner: 'Owner',
       admin: 'Admin',
       emissor: 'Emissor',
-      visualizador: 'Visualizador',
     };
     return map[role] || role;
   };
@@ -991,8 +991,7 @@ function UsuariosTab({ isMaster }: { isMaster: boolean }) {
                                          focus:outline-none focus:ring-2 focus:ring-purple-500"
                             >
                               <option value="emissor">Emissor</option>
-                              <option value="visualizador">Visualizador</option>
-                              <option value="admin">Admin</option>
+                              <option value="owner">Owner</option>
                             </select>
                             <div className="flex gap-2">
                               <button
@@ -1245,8 +1244,8 @@ function CreateUserModal({
   const [error, setError] = useState('');
 
   const availableRoles = isMaster
-    ? ['emissor', 'visualizador', 'admin', 'super_admin']
-    : ['emissor', 'visualizador', 'admin'];
+    ? ['emissor', 'owner', 'super_admin']
+    : ['emissor', 'owner'];
 
   function addPerfil() {
     if (perfis.length >= 20) return;
@@ -1406,7 +1405,7 @@ function CreateUserModal({
                   >
                     {availableRoles.map(r => (
                       <option key={r} value={r}>
-                        {r === 'super_admin' ? 'Super Admin' : r === 'admin' ? 'Admin' : r === 'emissor' ? 'Emissor' : 'Visualizador'}
+                        {r === 'super_admin' ? 'Super Admin' : r === 'owner' ? 'Owner' : 'Emissor'}
                       </option>
                     ))}
                   </select>

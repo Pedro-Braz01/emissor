@@ -20,6 +20,8 @@ import {
   X,
   Search,
   Plus,
+  Hash,
+  RefreshCw,
 } from 'lucide-react';
 
 interface CnaeCadastrado {
@@ -63,6 +65,14 @@ export default function ConfiguracoesEmpresaPage() {
   const [certFile, setCertFile] = useState<File | null>(null);
   const [certSenha, setCertSenha] = useState('');
   const [certStatus, setCertStatus] = useState<'none' | 'uploaded' | 'error'>('none');
+
+  // RPS / Nota numeracao
+  const [ultimoRps, setUltimoRps] = useState<number | null>(null);
+  const [ultimoRpsPrefeitura, setUltimoRpsPrefeitura] = useState<number | null>(null);
+  const [ultimaNotaEmitida, setUltimaNotaEmitida] = useState<number | null>(null);
+  const [serieRps, setSerieRps] = useState('1');
+  const [consultandoRps, setConsultandoRps] = useState(false);
+  const [rpsMessage, setRpsMessage] = useState('');
 
   useEffect(() => {
     loadEmpresaData();
@@ -115,6 +125,28 @@ export default function ConfiguracoesEmpresaPage() {
       setEnvioAutoEmissor((data as any).envio_auto_emissor ?? false);
       setCertStatus((data as any).certificado_digital_encrypted ? 'uploaded' : 'none');
       setCnaesCadastrados((data as any).cnaes_cadastrados || []);
+      setSerieRps((data as any).serie_rps || '1');
+      setUltimoRpsPrefeitura((data as any).ultimo_rps_prefeitura ?? null);
+
+      // Busca ultimo RPS e ultima nota emitida
+      const { data: maxRps } = await supabase
+        .from('notas_fiscais')
+        .select('numero_rps')
+        .eq('empresa_id', empresa.id)
+        .order('numero_rps', { ascending: false })
+        .limit(1)
+        .single();
+      setUltimoRps(maxRps?.numero_rps ?? null);
+
+      const { data: maxNota } = await supabase
+        .from('notas_fiscais')
+        .select('numero_nfse')
+        .eq('empresa_id', empresa.id)
+        .not('numero_nfse', 'is', null)
+        .order('numero_nfse', { ascending: false })
+        .limit(1)
+        .single();
+      setUltimaNotaEmitida(maxNota?.numero_nfse ?? null);
     }
     setLoading(false);
   }
@@ -165,6 +197,7 @@ export default function ConfiguracoesEmpresaPage() {
       cnaes_cadastrados: cnaesCadastrados,
       envio_auto_contador: envioAutoContador,
       envio_auto_emissor: envioAutoEmissor,
+      serie_rps: serieRps,
     };
 
     const { error: updateError } = await supabase
@@ -187,6 +220,36 @@ export default function ConfiguracoesEmpresaPage() {
 
     setSaved(true);
     setSaving(false);
+  }
+
+  async function handleConsultarRps() {
+    if (!empresa?.id) return;
+    setConsultandoRps(true);
+    setRpsMessage('');
+
+    try {
+      const res = await fetch('/api/nfse/sync-rps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empresaId: empresa.id }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (data.rpsPrefeitura) {
+          setUltimoRpsPrefeitura(data.rpsPrefeitura - 1);
+        }
+        setRpsMessage(data.message);
+        // Recarrega dados da empresa
+        await loadEmpresaData();
+      } else {
+        setRpsMessage(data.error || 'Erro ao consultar prefeitura');
+      }
+    } catch (err: any) {
+      setRpsMessage(err.message || 'Erro de conexao');
+    } finally {
+      setConsultandoRps(false);
+    }
   }
 
   async function handleCertUpload() {
@@ -442,6 +505,80 @@ export default function ConfiguracoesEmpresaPage() {
             <Upload className="h-4 w-4" />
             {saving ? 'Enviando...' : 'Enviar Certificado'}
           </button>
+        </div>
+
+        {/* Numeracao RPS / NFS-e */}
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <Hash className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">{'Numeração RPS / NFS-e'}</h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{'Último RPS (Local)'}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {ultimoRps ?? '—'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {'Próximo: '}<span className="font-semibold text-primary-600">{ultimoRps ? ultimoRps + 1 : '—'}</span>
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{'Último RPS (Prefeitura)'}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {ultimoRpsPrefeitura ?? '—'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {'Confirmado pela prefeitura'}
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{'Última NFS-e Emitida'}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {ultimaNotaEmitida ?? '—'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {'Número atribuído pela prefeitura'}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex-1">
+              <label className="label">{'Série RPS'}</label>
+              <select value={serieRps} onChange={e => setSerieRps(e.target.value)} className="input">
+                <option value="1">1 - Produção</option>
+                <option value="8">8 - Homologação</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="label">&nbsp;</label>
+              <button
+                onClick={handleConsultarRps}
+                disabled={consultandoRps}
+                className="btn btn-outline w-full"
+              >
+                {consultandoRps ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Consultando...</>
+                ) : (
+                  <><RefreshCw className="h-4 w-4" /> Consultar Prefeitura</>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {rpsMessage && (
+            <div className="mt-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3">
+              <p className="text-sm text-blue-700 dark:text-blue-300">{rpsMessage}</p>
+            </div>
+          )}
+
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+            {'O sistema usa automaticamente o maior número entre o local e o da prefeitura + 1. Clique em "Consultar Prefeitura" para sincronizar com os dados oficiais.'}
+          </p>
         </div>
 
         {/* Configurações de Email */}

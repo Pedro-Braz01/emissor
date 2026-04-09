@@ -146,6 +146,7 @@ export async function POST(request: Request) {
         discriminacao: body.servico.discriminacao,
         itemListaServico: body.servico.itemListaServico,
         codigoCnae: body.servico.codigoCnae,
+        codigoNbs: body.servico.codigoNbs,
         issRetido: body.servico.issRetido,
       },
       retencoes: body.retencoes ? {

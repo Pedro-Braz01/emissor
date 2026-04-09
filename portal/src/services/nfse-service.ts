@@ -36,6 +36,7 @@ export interface EmissaoInput {
     discriminacao: string;
     itemListaServico?: string;
     codigoCnae?: string;
+    codigoNbs?: string;
     issRetido?: boolean;
     aliquota?: number;
   };
@@ -246,6 +247,7 @@ export class NfseService {
           iss_retido: input.servico.issRetido || false,
           item_lista_servico: input.servico.itemListaServico || empresa.item_lista_servico,
           codigo_cnae: input.servico.codigoCnae || empresa.codigo_cnae,
+          codigo_nbs: input.servico.codigoNbs || null,
           discriminacao: input.servico.discriminacao,
           municipio_prestacao: '3543402',
           municipio_incidencia: '3543402',
@@ -284,6 +286,7 @@ export class NfseService {
           issRetido: input.servico.issRetido || false,
           itemListaServico: input.servico.itemListaServico || empresa.item_lista_servico || '01.07',
           codigoCnae: input.servico.codigoCnae || empresa.codigo_cnae,
+          codigoNbs: input.servico.codigoNbs,
           discriminacao: input.servico.discriminacao,
           codigoMunicipio: '3543402',
           exigibilidadeIss: 1,
