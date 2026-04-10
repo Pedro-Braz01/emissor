@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     .from('notas_fiscais')
     .select('id, empresa_id, numero_nfse, numero_rps, serie_rps, xml_enviado, xml_retorno, status, valor_servicos, valor_iss, aliquota_iss, discriminacao, competencia, data_emissao, codigo_verificacao, tomador_razao_social, tomador_cnpj_cpf, tomador_email, tomador_telefone, tomador_cep, tomador_endereco, tomador_numero, tomador_complemento, tomador_bairro, tomador_cidade, tomador_uf, iss_retido, valor_pis, valor_cofins, valor_inss, valor_irrf, valor_csll, valor_liquido, valor_deducoes, valor_base_calculo, desconto_condicionado, desconto_incondicionado, codigo_cnae, item_lc116, atividade_municipal, codigo_nbs')
     .eq('id', notaId)
-    .single();
+    .maybeSingle();
 
   if (error || !nota) {
     return NextResponse.json({ error: 'Nota não encontrada' }, { status: 404 });

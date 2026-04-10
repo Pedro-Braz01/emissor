@@ -128,13 +128,13 @@ export class XmlBuilder {
     const baseCalculo = servico.valorServicos - (servico.valorDeducoes || 0) - (servico.descontoIncondicionado || 0);
     const valorIss = servico.valorIss ?? baseCalculo * servico.aliquota;
 
-    // Monta bloco <Valores> — padrão ABRASF 2.04 (Ribeirão Preto / ISSNet)
-    // Tags na ordem exigida pelo schema ABRASF: ValorServicos, ValorDeducoes,
-    // ValorPis, ValorCofins, ValorInss, ValorIr, ValorCsll, OutrasRetencoes,
-    // BaseCalculo, Aliquota, ValorIss, ValorLiquidoNfse,
-    // DescontoIncondicionado, DescontoCondicionado
-    const valorLiquidoNfse = baseCalculo - (servico.issRetido ? valorIss : 0);
-
+    // Bloco <Servico><Valores> — padrão ABRASF 2.04 (Ribeirão Preto / ISSNet)
+    // Ordem conforme XML validado pela prefeitura:
+    // ValorServicos, ValorDeducoes, ValorPis, ValorCofins, ValorInss, ValorIr,
+    // ValorCsll, OutrasRetencoes, ValorIss, Aliquota,
+    // DescontoIncondicionado, DescontoCondicionado.
+    // BaseCalculo e ValorLiquidoNfse NÃO vão aqui — esses tags pertencem
+    // somente ao bloco <ValoresNfse> da resposta da prefeitura.
     const valoresXml = [
       `<ValorServicos>${formatDecimal(servico.valorServicos)}</ValorServicos>`,
       `<ValorDeducoes>${formatDecimal(servico.valorDeducoes || 0)}</ValorDeducoes>`,
@@ -144,10 +144,8 @@ export class XmlBuilder {
       `<ValorIr>${formatDecimal(servico.valorIr || 0)}</ValorIr>`,
       `<ValorCsll>${formatDecimal(servico.valorCsll || 0)}</ValorCsll>`,
       `<OutrasRetencoes>${formatDecimal(servico.outrasRetencoes || 0)}</OutrasRetencoes>`,
-      `<BaseCalculo>${formatDecimal(baseCalculo)}</BaseCalculo>`,
-      `<Aliquota>${formatDecimal(servico.aliquota, 4)}</Aliquota>`,
       `<ValorIss>${formatDecimal(valorIss)}</ValorIss>`,
-      `<ValorLiquidoNfse>${formatDecimal(valorLiquidoNfse)}</ValorLiquidoNfse>`,
+      `<Aliquota>${formatDecimal(servico.aliquota, 4)}</Aliquota>`,
       `<DescontoIncondicionado>${formatDecimal(servico.descontoIncondicionado || 0)}</DescontoIncondicionado>`,
       `<DescontoCondicionado>${formatDecimal(servico.descontoCondicionado || 0)}</DescontoCondicionado>`,
     ].join('\n          ');

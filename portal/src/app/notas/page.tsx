@@ -21,6 +21,7 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { gerarPdfNfse } from '@/services/pdf-nfse';
 
 interface Nota {
   id: string;
@@ -166,6 +167,92 @@ export default function NotasPage() {
     window.open(`/api/nfse/download?notaId=${nota.id}&tipo=${tipo}`, '_blank');
   };
 
+  const handleDownloadPdfNota = async (nota: Nota) => {
+    try {
+      const res = await fetch(`/api/nfse/download?notaId=${nota.id}&tipo=pdf`);
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        alert(json.error || 'Erro ao gerar PDF');
+        return;
+      }
+      const { nota: n, tomador, prestador } = json.data;
+      if (!prestador) {
+        alert('Dados do prestador (empresa) não encontrados');
+        return;
+      }
+
+      const aliquotaPct = Number(n.aliquotaIss || 0) * 100;
+
+      const doc = gerarPdfNfse({
+        numeroNfse: n.numeroNfse?.toString() || '-',
+        dataEmissao: n.dataEmissao ? formatDate(n.dataEmissao) : '-',
+        competencia: n.competencia ? formatDate(n.competencia) : '-',
+        codigoAutenticidade: n.codigoVerificacao || '-',
+        naturezaOperacao: 'Tributação no município',
+        numeroRps: n.numeroRps?.toString(),
+        serieRps: n.serieRps,
+        dataEmissaoRps: n.dataEmissao ? formatDate(n.dataEmissao) : undefined,
+        localServicos: `${prestador.cidade}/${prestador.uf}`,
+        municipioIncidencia: `${prestador.cidade}/${prestador.uf}`,
+        prestador: {
+          razaoSocial: prestador.razaoSocial || '',
+          cnpj: prestador.cnpj || '',
+          inscricaoMunicipal: prestador.inscricaoMunicipal || '',
+          endereco: prestador.endereco || '',
+          cep: prestador.cep || '',
+          telefone: prestador.telefone || '',
+          email: prestador.email || '',
+          cidade: prestador.cidade || 'Ribeirão Preto',
+          uf: prestador.uf || 'SP',
+        },
+        tomador: {
+          cpfCnpj: tomador.cpfCnpj || '',
+          razaoSocial: tomador.razaoSocial || '',
+          endereco: tomador.endereco || '',
+          numero: tomador.numero || '',
+          complemento: tomador.complemento || '',
+          bairro: tomador.bairro || '',
+          cep: tomador.cep || '',
+          cidade: tomador.cidade || '',
+          uf: tomador.uf || '',
+          telefone: tomador.telefone || '',
+          email: tomador.email || '',
+        },
+        servico: {
+          discriminacao: n.discriminacao || '',
+          atividadeMunicipio: n.atividadeMunicipal || '',
+          aliquota: aliquotaPct,
+          itemListaServico: n.itemLc116 || '',
+          codigoNbs: n.codigoNbs || '',
+          codigoCnae: n.codigoCnae || '',
+        },
+        valores: {
+          valorServicos: Number(n.valorServicos || 0),
+          descontoIncondicionado: Number(n.descontoIncondicionado || 0),
+          deducoes: Number(n.valorDeducoes || 0),
+          baseCalculo: Number(n.valorBaseCalculo || n.valorServicos || 0),
+          totalIssqn: Number(n.valorIss || 0),
+          issRetido: !!n.issRetido,
+          descontoCondicionado: Number(n.descontoCondicionado || 0),
+          pis: Number(n.valorPis || 0),
+          cofins: Number(n.valorCofins || 0),
+          inss: Number(n.valorInss || 0),
+          irrf: Number(n.valorIrrf || 0),
+          csll: Number(n.valorCsll || 0),
+          outrasRetencoes: 0,
+          issRetidoValor: n.issRetido ? Number(n.valorIss || 0) : 0,
+          valorLiquido: Number(n.valorLiquido || n.valorServicos || 0),
+        },
+        regimeTributario: prestador.regimeTributario || '',
+      });
+
+      doc.save(`NFSe_${n.numeroNfse || n.numeroRps}.pdf`);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao gerar PDF da nota');
+    }
+  };
+
   const exportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
     doc.setFontSize(16);
@@ -215,68 +302,6 @@ export default function NotasPage() {
     XLSX.writeFile(wb, `notas_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  const exportXML = () => {
-    const escapeXml = (str: string) =>
-      str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
-
-    const buildNfseXml = (nota: Nota) => {
-      const numero = nota.numero_nfse?.toString() || '';
-      const codigo = nota.codigo_verificacao || '';
-      const dataEmissao = nota.data_emissao || '';
-      const valorServicos = Number(nota.valor_servicos).toFixed(2);
-      const valorIss = Number(nota.valor_iss).toFixed(2);
-      const prestadorRazao = escapeXml(empresa?.razaoSocial || '');
-      const tomadorRazao = escapeXml(nota.tomador_razao_social || '');
-      const tomadorCpfCnpj = escapeXml(nota.tomador_cnpj_cpf || '');
-      const discriminacao = escapeXml(nota.discriminacao || '');
-
-      return `  <CompNfse>
-    <Nfse>
-      <InfNfse>
-        <Numero>${numero}</Numero>
-        <CodigoVerificacao>${codigo}</CodigoVerificacao>
-        <DataEmissao>${dataEmissao}</DataEmissao>
-        <Valores>
-          <ValorServicos>${valorServicos}</ValorServicos>
-          <ValorIss>${valorIss}</ValorIss>
-        </Valores>
-        <PrestadorServico>
-          <RazaoSocial>${prestadorRazao}</RazaoSocial>
-        </PrestadorServico>
-        <TomadorServico>
-          <RazaoSocial>${tomadorRazao}</RazaoSocial>
-          <CpfCnpj>${tomadorCpfCnpj}</CpfCnpj>
-        </TomadorServico>
-        <Discriminacao>${discriminacao}</Discriminacao>
-      </InfNfse>
-    </Nfse>
-  </CompNfse>`;
-    };
-
-    let xmlContent: string;
-    if (notasFiltradas.length === 1) {
-      xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n${buildNfseXml(notasFiltradas[0]).trim()}`;
-    } else {
-      const nfseElements = notasFiltradas.map(buildNfseXml).join('\n');
-      xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<ListaNfse>\n${nfseElements}\n</ListaNfse>`;
-    }
-
-    const blob = new Blob([xmlContent], { type: 'application/xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `notas_${new Date().toISOString().slice(0, 10)}.xml`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -289,13 +314,9 @@ export default function NotasPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <button onClick={exportXML} className="btn btn-outline" disabled={notasFiltradas.length === 0}>
-              <FileText className="h-4 w-4" />
-              XML
-            </button>
             <button onClick={exportPDF} className="btn btn-outline" disabled={notasFiltradas.length === 0}>
               <Download className="h-4 w-4" />
-              PDF
+              Lista PDF
             </button>
             <button onClick={exportXLS} className="btn btn-outline" disabled={notasFiltradas.length === 0}>
               <FileSpreadsheet className="h-4 w-4" />
@@ -447,11 +468,11 @@ export default function NotasPage() {
                               >
                                 <Eye className="h-4 w-4" />
                               </button>
-                              {nota.xml_enviado && (
+                              {nota.numero_nfse && (
                                 <button
-                                  onClick={() => handleDownloadXml(nota, 'xml_enviado')}
-                                  className="rounded-lg p-2 text-gray-500 dark:text-gray-400 hover:bg-blue-50 hover:text-blue-600"
-                                  title="Baixar XML enviado"
+                                  onClick={() => handleDownloadPdfNota(nota)}
+                                  className="rounded-lg p-2 text-gray-500 dark:text-gray-400 hover:bg-primary-50 hover:text-primary-600"
+                                  title="Baixar DANFSe (PDF)"
                                 >
                                   <Download className="h-4 w-4" />
                                 </button>
@@ -460,7 +481,7 @@ export default function NotasPage() {
                                 <button
                                   onClick={() => handleDownloadXml(nota, 'xml_retorno')}
                                   className="rounded-lg p-2 text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-green-600"
-                                  title="Baixar XML retorno"
+                                  title="Baixar XML da NFS-e (validado pela prefeitura)"
                                 >
                                   <FileText className="h-4 w-4" />
                                 </button>
@@ -568,13 +589,13 @@ export default function NotasPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {notaSelecionada.xml_enviado && (
+                  {notaSelecionada.numero_nfse && (
                     <button
-                      onClick={() => handleDownloadXml(notaSelecionada, 'xml_enviado')}
-                      className="btn btn-outline flex-1 flex items-center justify-center gap-2"
+                      onClick={() => handleDownloadPdfNota(notaSelecionada)}
+                      className="btn btn-primary flex-1 flex items-center justify-center gap-2"
                     >
                       <Download className="h-4 w-4" />
-                      XML Enviado
+                      DANFSe (PDF)
                     </button>
                   )}
                   {notaSelecionada.xml_retorno && (
@@ -583,19 +604,8 @@ export default function NotasPage() {
                       className="btn btn-outline flex-1 flex items-center justify-center gap-2"
                     >
                       <FileText className="h-4 w-4" />
-                      XML Retorno
+                      XML NFS-e
                     </button>
-                  )}
-                  {notaSelecionada.pdf_url && (
-                    <a
-                      href={notaSelecionada.pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-primary flex-1 flex items-center justify-center gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      PDF NFSe
-                    </a>
                   )}
                 </div>
               </div>
