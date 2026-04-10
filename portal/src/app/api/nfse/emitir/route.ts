@@ -8,8 +8,11 @@ import { headers } from 'next/headers';
 const EmitirSchema = z.object({
   empresaId: z.string().uuid(),
   tomador: z.object({
-    cpfCnpj: z.string().min(11),
-    razaoSocial: z.string().min(2),
+    cpfCnpj: z.string().min(11).max(18).refine((val) => {
+      const digits = val.replace(/\D/g, '');
+      return digits.length === 11 || digits.length === 14;
+    }, 'CPF deve ter 11 dígitos ou CNPJ 14 dígitos'),
+    razaoSocial: z.string().min(2).max(200),
     email: z.string().email().optional().or(z.literal('')),
     telefone: z.string().optional(),
     endereco: z.object({
@@ -18,7 +21,8 @@ const EmitirSchema = z.object({
       numero: z.string().optional(),
       complemento: z.string().optional(),
       bairro: z.string().optional(),
-      uf: z.string().optional(),
+      uf: z.string().max(2).optional(),
+      codigoMunicipio: z.string().optional(),
     }).optional(),
   }),
   servico: z.object({
@@ -28,6 +32,7 @@ const EmitirSchema = z.object({
     issRetido: z.boolean().default(false),
     codigoCnae: z.string().optional(),
     codigoNbs: z.string().optional(),
+    aliquota: z.number().min(0).max(1).optional(),
   }),
   retencoes: z.object({
     pis: z.number().default(0),
@@ -60,7 +65,10 @@ export async function POST(request: Request) {
   try {
     body = EmitirSchema.parse(await request.json());
   } catch (err) {
-    return NextResponse.json({ error: 'Dados inválidos', details: err }, { status: 400 });
+    const zodErrors = err instanceof z.ZodError
+      ? err.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+      : ['Formato de dados inválido'];
+    return NextResponse.json({ error: 'Dados inválidos', details: zodErrors }, { status: 400 });
   }
 
   // ── Verifica permissão na empresa ──
@@ -70,15 +78,19 @@ export async function POST(request: Request) {
     .eq('user_id', user.id)
     .eq('empresa_id', body.empresaId)
     .eq('ativo', true)
-    .single();
+    .maybeSingle();
 
   const { data: empresaOwner } = await supabase
     .from('empresas')
     .select('user_id')
     .eq('id', body.empresaId)
-    .single();
+    .maybeSingle();
 
-  if (!perfil && empresaOwner?.user_id !== user.id) {
+  if (!empresaOwner) {
+    return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 });
+  }
+
+  if (!perfil && empresaOwner.user_id !== user.id) {
     return NextResponse.json({ error: 'Sem permissão para esta empresa' }, { status: 403 });
   }
 
@@ -87,9 +99,16 @@ export async function POST(request: Request) {
     .from('licencas')
     .select('*')
     .eq('empresa_id', body.empresaId)
-    .single();
+    .maybeSingle();
 
-  if (!licenca?.license_active) {
+  if (!licenca) {
+    return NextResponse.json(
+      { error: 'Licença não encontrada. Entre em contato com o suporte.' },
+      { status: 403 }
+    );
+  }
+
+  if (!licenca.license_active) {
     return NextResponse.json(
       { error: 'Licença inativa. Entre em contato com o suporte.' },
       { status: 403 }
@@ -97,7 +116,7 @@ export async function POST(request: Request) {
   }
 
   // ── Verifica limite mensal ──
-  if (licenca.notas_mes_atual >= licenca.notas_mes_limite) {
+  if ((licenca.notas_mes_atual || 0) >= (licenca.notas_mes_limite || 50)) {
     return NextResponse.json(
       { error: `Limite mensal de ${licenca.notas_mes_limite} notas atingido.` },
       { status: 403 }
@@ -138,7 +157,7 @@ export async function POST(request: Request) {
           bairro: body.tomador.endereco.bairro,
           cep: body.tomador.endereco.cep,
           uf: body.tomador.endereco.uf,
-          codigoMunicipio: '3543402',
+          codigoMunicipio: body.tomador.endereco.codigoMunicipio || '3543402',
         } : undefined,
       },
       servico: {
@@ -148,6 +167,7 @@ export async function POST(request: Request) {
         codigoCnae: body.servico.codigoCnae,
         codigoNbs: body.servico.codigoNbs,
         issRetido: body.servico.issRetido,
+        aliquota: body.servico.aliquota,
       },
       retencoes: body.retencoes ? {
         pis: body.retencoes.pis,

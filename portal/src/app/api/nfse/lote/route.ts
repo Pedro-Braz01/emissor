@@ -121,15 +121,19 @@ export async function POST(request: Request) {
     .eq('user_id', user.id)
     .eq('empresa_id', empresaId)
     .eq('ativo', true)
-    .single();
+    .maybeSingle();
 
   const { data: empresaOwner } = await supabase
     .from('empresas')
     .select('user_id')
     .eq('id', empresaId)
-    .single();
+    .maybeSingle();
 
-  if (!perfil && empresaOwner?.user_id !== user.id) {
+  if (!empresaOwner) {
+    return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 });
+  }
+
+  if (!perfil && empresaOwner.user_id !== user.id) {
     return NextResponse.json({ error: 'Sem permissão para esta empresa' }, { status: 403 });
   }
 
@@ -138,7 +142,7 @@ export async function POST(request: Request) {
     .from('licencas')
     .select('*')
     .eq('empresa_id', empresaId)
-    .single();
+    .maybeSingle();
 
   if (!licenca?.license_active) {
     return NextResponse.json({ error: 'Licença inativa' }, { status: 403 });

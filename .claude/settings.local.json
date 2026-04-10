@@ -35,7 +35,9 @@
       "Bash(grep -n \"ADD COLUMN\" \"C:\\\\Users\\\\Pedro\\\\emissor\\\\database\\\\migrations\"/*)",
       "Bash(find \"C:\\\\Users\\\\Pedro\\\\emissor\\\\database\" -name \"*.sql\" -exec grep -l \"serie_rps\\\\|regime_especial\\\\|optante_simples\\\\|incentivo_fiscal\" {} \\\\;)",
       "Bash(grep -r \"SUPABASE_URL\\\\|NEXT_PUBLIC_SUPABASE\" .env*)",
-      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")"
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(python scripts/gerar_dados_prefeitura.py)",
+      "Bash(git log:*)"
     ]
   }
 }

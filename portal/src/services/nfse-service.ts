@@ -26,6 +26,7 @@ export interface EmissaoInput {
       numero?: string;
       complemento?: string;
       bairro?: string;
+      cidade?: string;
       codigoMunicipio?: string;
       uf?: string;
       cep?: string;
@@ -124,6 +125,13 @@ export class NfseService {
         return { success: false, error: 'Certificado digital expirado' };
       }
 
+      // 2b. Busca configurações tributárias da empresa
+      const { data: configTrib } = await this.supabase
+        .from('configuracoes_tributarias')
+        .select('*')
+        .eq('empresa_id', input.empresaId)
+        .single();
+
       // 3. Obtém próximo número de RPS
       // 3a. Consulta a prefeitura para verificar o último RPS disponível
       const serieRps = empresa.serie_rps || ((this.soapClient as any).ambiente === 'producao' ? '1' : '8');
@@ -196,17 +204,25 @@ export class NfseService {
         tomadorId = novoTomador?.id;
       }
 
-      // 5. Calcula impostos
-      const aliquotaIss = input.servico.aliquota || Number(empresa.aliquota_iss) || 0.05;
+      // 5. Calcula impostos usando configuracoes_tributarias
+      //    Frontend envia aliquota como fração decimal (0.02 = 2%)
+      //    DB armazena como porcentagem (2.00 = 2%)
+      //    Internamente usamos fração decimal para cálculos
+      const aliquotaIss = input.servico.aliquota  // fração do frontend (0.02)
+        || (Number(configTrib?.aliquota_iss) || 2.00) / 100;  // DB% → fração
+
       const valorServicos = input.servico.valorServicos;
-      const valorIss = valorServicos * aliquotaIss;
+      const baseCalculo = valorServicos; // sem deduções por enquanto
+      const valorIss = baseCalculo * aliquotaIss;
+
       const retPis = input.retencoes?.pis || 0;
       const retCofins = input.retencoes?.cofins || 0;
       const retInss = input.retencoes?.inss || 0;
       const retIrrf = input.retencoes?.irrf || 0;
       const retCsll = input.retencoes?.csll || 0;
+      const issRetido = input.servico.issRetido ?? configTrib?.iss_retido_fonte ?? false;
       const totalRetencoes = retPis + retCofins + retInss + retIrrf + retCsll +
-        (input.servico.issRetido ? valorIss : 0);
+        (issRetido ? valorIss : 0);
       const valorLiquido = valorServicos - totalRetencoes;
 
       // 6. Cria registro da nota (status processando)
@@ -226,7 +242,7 @@ export class NfseService {
           tomador_complemento: input.tomador.endereco?.complemento || null,
           tomador_bairro: input.tomador.endereco?.bairro || null,
           tomador_cep: input.tomador.endereco?.cep || null,
-          tomador_cidade: null,
+          tomador_cidade: input.tomador.endereco?.cidade || null,
           tomador_uf: input.tomador.endereco?.uf || null,
           numero_rps: numeroRps,
           serie_rps: serieRps,
@@ -244,8 +260,8 @@ export class NfseService {
           valor_csll: retCsll,
           valor_liquido: valorLiquido,
           valor_base_calculo: valorServicos,
-          iss_retido: input.servico.issRetido || false,
-          item_lc116: input.servico.itemListaServico || empresa.item_lista_servico,
+          iss_retido: issRetido,
+          item_lc116: input.servico.itemListaServico || configTrib?.item_lista_servico || empresa.item_lista_servico,
           codigo_cnae: input.servico.codigoCnae || empresa.codigo_cnae,
           codigo_nbs: input.servico.codigoNbs || null,
           discriminacao: input.servico.discriminacao,
@@ -283,8 +299,8 @@ export class NfseService {
           valorIr: retIrrf,
           valorCsll: retCsll,
           aliquota: aliquotaIss,
-          issRetido: input.servico.issRetido || false,
-          itemListaServico: input.servico.itemListaServico || empresa.item_lista_servico || '01.07',
+          issRetido,
+          itemListaServico: input.servico.itemListaServico || configTrib?.item_lista_servico || empresa.item_lista_servico || '01.07',
           codigoCnae: input.servico.codigoCnae || empresa.codigo_cnae,
           codigoNbs: input.servico.codigoNbs,
           discriminacao: input.servico.discriminacao,

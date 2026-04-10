@@ -12,6 +12,7 @@ from collections import OrderedDict
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CNAE_CSV = os.path.join(BASE_DIR, "arq prefeitura", "CORRELACAO_CNAE_SUBITEMLC116_RIBEIRAOPRETO.csv")
 NBS_CSV = os.path.join(BASE_DIR, "arq prefeitura", "CORRELACAO_NBS_SUBITEMLC116_RIBEIRAOPRETO.csv")
+TRIBMUN_CSV = os.path.join(BASE_DIR, "arq prefeitura", "CORRELACAO_TRIBMUN_TRIBNAC_RIBEIRAOPRETO.csv")
 OUTPUT_TS = os.path.join(BASE_DIR, "portal", "src", "lib", "dados-prefeitura.ts")
 
 
@@ -77,16 +78,56 @@ def read_nbs_csv(filepath: str):
     return nbs_items, lc116_map
 
 
+def read_tribmun_csv(filepath: str):
+    """Read TribMun x TribNac CSV and return dict of tribmun_code -> {descricao, aliquota, tribNac codes}.
+    The CSV has 272K+ rows but many duplicates — we extract unique municipal codes."""
+    tribmun_items = OrderedDict()  # code -> {descricao, aliquota, tribNac: set}
+
+    try:
+        with open(filepath, encoding='latin-1', newline='') as f:
+            reader = csv.reader(f, delimiter=';')
+            header = next(reader)  # skip header
+            for row in reader:
+                if len(row) < 5:
+                    continue
+                tribmun_code = row[0].strip().strip('"')
+                tribmun_desc = row[1].strip().strip('"')
+                aliquota_str = row[2].strip().strip('"').replace('%', '').replace(',', '.')
+                tribnac_code = row[3].strip().strip('"')
+
+                if not tribmun_code:
+                    continue
+
+                try:
+                    aliquota = float(aliquota_str) if aliquota_str else 0
+                except ValueError:
+                    aliquota = 0
+
+                if tribmun_code not in tribmun_items:
+                    tribmun_items[tribmun_code] = {
+                        'descricao': tribmun_desc,
+                        'aliquota': aliquota,
+                        'tribNac': set()
+                    }
+                if tribnac_code:
+                    tribmun_items[tribmun_code]['tribNac'].add(tribnac_code)
+    except FileNotFoundError:
+        print(f"  Warning: TribMun CSV not found at {filepath}")
+        return {}
+
+    return tribmun_items
+
+
 def escape_ts_string(s: str) -> str:
     """Escape a string for use in a TypeScript single-quoted string."""
     return s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', '\\n').replace('\r', '')
 
 
-def generate_typescript(cnaes, nbs_items, lc116_map):
+def generate_typescript(cnaes, nbs_items, lc116_map, tribmun_items=None):
     """Generate the TypeScript file content."""
     lines = []
     lines.append("// Auto-generated file - do not edit manually")
-    lines.append("// Source: Prefeitura de Ribeirão Preto - Correlação CNAE/NBS x Subitem LC 116")
+    lines.append("// Source: Prefeitura de Ribeirão Preto - Correlação CNAE/NBS/TribMun x Subitem LC 116")
     lines.append("")
 
     # Interfaces
@@ -107,6 +148,14 @@ def generate_typescript(cnaes, nbs_items, lc116_map):
     lines.append("  codigo: string;")
     lines.append("  descricao: string;")
     lines.append("  lc116: string[];")
+    lines.append("}")
+    lines.append("")
+
+    lines.append("export interface TribMunItem {")
+    lines.append("  codigo: string;")
+    lines.append("  descricao: string;")
+    lines.append("  aliquota: number;")
+    lines.append("  tribNac: string[];")
     lines.append("}")
     lines.append("")
 
@@ -134,6 +183,18 @@ def generate_typescript(cnaes, nbs_items, lc116_map):
     lines.append("];")
     lines.append("")
 
+    # TribMun items (Código de Tributação Municipal → Nacional)
+    if tribmun_items:
+        lines.append("export const TRIBMUN_ITEMS: TribMunItem[] = [")
+        for code, data in tribmun_items.items():
+            tribnac_arr = json.dumps(sorted(list(data['tribNac'])))
+            lines.append(f"  {{ codigo: '{escape_ts_string(code)}', descricao: '{escape_ts_string(data['descricao'])}', aliquota: {data['aliquota']}, tribNac: {tribnac_arr} }},")
+        lines.append("];")
+        lines.append("")
+    else:
+        lines.append("export const TRIBMUN_ITEMS: TribMunItem[] = [];")
+        lines.append("")
+
     # Lookup maps (built at module level for performance)
     lines.append("// Lookup maps")
     lines.append("const cnaeMap = new Map<string, CnaeItem>();")
@@ -144,6 +205,9 @@ def generate_typescript(cnaes, nbs_items, lc116_map):
     lines.append("")
     lines.append("const lc116Map = new Map<string, Lc116Item>();")
     lines.append("for (const item of LC116_ITEMS) { lc116Map.set(item.codigo, item); }")
+    lines.append("")
+    lines.append("const tribMunMap = new Map<string, TribMunItem>();")
+    lines.append("for (const item of TRIBMUN_ITEMS) { tribMunMap.set(item.codigo, item); }")
     lines.append("")
 
     # Lookup functions
@@ -183,6 +247,20 @@ def generate_typescript(cnaes, nbs_items, lc116_map):
     lines.append("}")
     lines.append("")
 
+    lines.append("export function getTribMun(codigoTribMun: string): TribMunItem | undefined {")
+    lines.append("  return tribMunMap.get(codigoTribMun);")
+    lines.append("}")
+    lines.append("")
+
+    lines.append("export function searchTribMun(query: string): TribMunItem[] {")
+    lines.append("  const q = query.toLowerCase().trim();")
+    lines.append("  if (!q) return [];")
+    lines.append("  return TRIBMUN_ITEMS.filter(")
+    lines.append("    (item) => item.codigo.includes(q) || item.descricao.toLowerCase().includes(q)")
+    lines.append("  ).slice(0, 50);  // Limit results for performance")
+    lines.append("}")
+    lines.append("")
+
     return '\n'.join(lines)
 
 
@@ -197,6 +275,10 @@ def main():
     print(f"  Found {len(nbs_items)} unique NBS codes")
     print(f"  Found {len(lc116_from_nbs)} unique LC116 codes from NBS")
 
+    print(f"Reading TribMun CSV: {TRIBMUN_CSV}")
+    tribmun_items = read_tribmun_csv(TRIBMUN_CSV)
+    print(f"  Found {len(tribmun_items)} unique TribMun codes")
+
     # Merge LC116 maps
     lc116_map = {**lc116_from_cnae, **lc116_from_nbs}
     print(f"  Total unique LC116 codes: {len(lc116_map)}")
@@ -208,7 +290,7 @@ def main():
         sample_nbs = next(iter(nbs_items.values()))
         print(f"  Sample NBS desc: {sample_nbs['descricao']}")
 
-    ts_content = generate_typescript(cnaes, nbs_items, lc116_map)
+    ts_content = generate_typescript(cnaes, nbs_items, lc116_map, tribmun_items)
 
     os.makedirs(os.path.dirname(OUTPUT_TS), exist_ok=True)
     with open(OUTPUT_TS, 'w', encoding='utf-8') as f:

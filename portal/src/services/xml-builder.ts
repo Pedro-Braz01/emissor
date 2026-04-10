@@ -126,20 +126,15 @@ export class XmlBuilder {
 
     // Monta valores
     const baseCalculo = servico.valorServicos - (servico.valorDeducoes || 0) - (servico.descontoIncondicionado || 0);
-    const valorIss = servico.valorIss || baseCalculo * servico.aliquota;
+    const valorIss = servico.valorIss ?? baseCalculo * servico.aliquota;
 
-    // Helper: só inclui tag se valor > 0 (ABRASF 2.04: omitir tags opcionais com valor zero)
-    const optTag = (tag: string, value: number | undefined, decimals = 2): string => {
-      if (!value || value <= 0) return '';
-      return `<${tag}>${formatDecimal(value, decimals)}</${tag}>`;
-    };
+    // Monta bloco <Valores> — padrão ABRASF 2.04 (Ribeirão Preto / ISSNet)
+    // Tags na ordem exigida pelo schema ABRASF: ValorServicos, ValorDeducoes,
+    // ValorPis, ValorCofins, ValorInss, ValorIr, ValorCsll, OutrasRetencoes,
+    // BaseCalculo, Aliquota, ValorIss, ValorLiquidoNfse,
+    // DescontoIncondicionado, DescontoCondicionado
+    const valorLiquidoNfse = baseCalculo - (servico.issRetido ? valorIss : 0);
 
-    // ValTotTributos: soma de todos os tributos (ABRASF 2.04)
-    const valTotTributos = (servico.valorPis || 0) + (servico.valorCofins || 0) +
-      (servico.valorInss || 0) + (servico.valorIr || 0) + (servico.valorCsll || 0) +
-      (servico.outrasRetencoes || 0) + valorIss;
-
-    // Monta bloco <Valores> - todas as tags incluídas (padrão Ribeirão Preto)
     const valoresXml = [
       `<ValorServicos>${formatDecimal(servico.valorServicos)}</ValorServicos>`,
       `<ValorDeducoes>${formatDecimal(servico.valorDeducoes || 0)}</ValorDeducoes>`,
@@ -149,9 +144,10 @@ export class XmlBuilder {
       `<ValorIr>${formatDecimal(servico.valorIr || 0)}</ValorIr>`,
       `<ValorCsll>${formatDecimal(servico.valorCsll || 0)}</ValorCsll>`,
       `<OutrasRetencoes>${formatDecimal(servico.outrasRetencoes || 0)}</OutrasRetencoes>`,
-      `<ValTotTributos>${formatDecimal(valTotTributos)}</ValTotTributos>`,
-      `<ValorIss>${formatDecimal(valorIss)}</ValorIss>`,
+      `<BaseCalculo>${formatDecimal(baseCalculo)}</BaseCalculo>`,
       `<Aliquota>${formatDecimal(servico.aliquota, 4)}</Aliquota>`,
+      `<ValorIss>${formatDecimal(valorIss)}</ValorIss>`,
+      `<ValorLiquidoNfse>${formatDecimal(valorLiquidoNfse)}</ValorLiquidoNfse>`,
       `<DescontoIncondicionado>${formatDecimal(servico.descontoIncondicionado || 0)}</DescontoIncondicionado>`,
       `<DescontoCondicionado>${formatDecimal(servico.descontoCondicionado || 0)}</DescontoCondicionado>`,
     ].join('\n          ');

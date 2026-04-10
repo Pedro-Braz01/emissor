@@ -31,9 +31,9 @@ export async function GET(request: Request) {
   // Busca dados da empresa para o PDF
   const { data: empresa } = await supabase
     .from('empresas')
-    .select('razao_social, cnpj, inscricao_municipal, endereco_completo, telefone, email_empresa, regime_tributario')
-    .eq('id', nota.empresa_id || '')
-    .single();
+    .select('razao_social, cnpj, inscricao_municipal, endereco_completo, telefone, email_empresa, regime_tributario, cep, cidade, uf')
+    .eq('id', nota.empresa_id)
+    .maybeSingle();
 
   if (tipo === 'xml_enviado') {
     const xml = nota.xml_enviado;
@@ -117,9 +117,12 @@ export async function GET(request: Request) {
           razaoSocial: empresa.razao_social,
           cnpj: empresa.cnpj,
           inscricaoMunicipal: empresa.inscricao_municipal,
-          endereco: empresa.endereco_completo,
-          telefone: empresa.telefone,
-          email: empresa.email_empresa,
+          endereco: empresa.endereco_completo || '',
+          cep: empresa.cep || '',
+          telefone: empresa.telefone || '',
+          email: empresa.email_empresa || '',
+          cidade: empresa.cidade || 'Ribeirão Preto',
+          uf: empresa.uf || 'SP',
           regimeTributario: empresa.regime_tributario,
         } : null,
       },

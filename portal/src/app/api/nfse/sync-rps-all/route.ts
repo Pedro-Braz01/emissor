@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
-    const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
+    const MASTER_EMAIL = process.env.MASTER_EMAIL || '';
     const allAdmins = ADMIN_EMAILS.length > 0 ? ADMIN_EMAILS : [MASTER_EMAIL];
     if (!allAdmins.includes(user.email || '')) {
       return NextResponse.json({ error: 'Apenas admin pode executar sync em massa' }, { status: 403 });

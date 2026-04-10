@@ -87,6 +87,7 @@ export default function EmitirPage() {
   const [tomadorBairro, setTomadorBairro] = useState('');
   const [tomadorCidade, setTomadorCidade] = useState('');
   const [tomadorUf, setTomadorUf] = useState('');
+  const [tomadorCodigoMunicipio, setTomadorCodigoMunicipio] = useState('');
   const [tomadorTelefone, setTomadorTelefone] = useState('');
   const [tomadorEmail, setTomadorEmail] = useState('');
   const [enviarParaTomador, setEnviarParaTomador] = useState(false);
@@ -268,6 +269,7 @@ export default function EmitirPage() {
       setTomadorBairro(data.neighborhood);
       setTomadorUf(data.state);
       setTomadorCidade(data.city);
+      if (data.cityIbge) setTomadorCodigoMunicipio(data.cityIbge);
     }
   };
 
@@ -413,6 +415,7 @@ export default function EmitirPage() {
               complemento: tomadorComplemento,
               bairro: tomadorBairro,
               uf: tomadorUf,
+              codigoMunicipio: tomadorCodigoMunicipio || undefined,
             },
           },
           servico: {
@@ -422,6 +425,7 @@ export default function EmitirPage() {
             issRetido,
             codigoCnae: cnaeInput,
             codigoNbs,
+            aliquota: parseFloat(aliquotaIss) ? parseFloat(aliquotaIss) / 100 : undefined,
           },
           retencoes: {
             pis: parseFloat(retPis) || 0,

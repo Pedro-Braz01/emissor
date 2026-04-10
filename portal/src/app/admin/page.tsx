@@ -24,7 +24,7 @@ import {
   Save,
 } from 'lucide-react';
 
-const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
+const MASTER_EMAIL = process.env.NEXT_PUBLIC_MASTER_EMAIL || '';
 
 // ─── Types ───────────────────────────────────────────────────────────
 

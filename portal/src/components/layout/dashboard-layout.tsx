@@ -34,7 +34,7 @@ import { useTheme } from '@/components/providers/theme-provider';
 // MENU ITEMS
 // ===================
 
-const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
+const MASTER_EMAIL = process.env.NEXT_PUBLIC_MASTER_EMAIL || '';
 
 const menuItems = [
   {

@@ -19,6 +19,7 @@ export interface CepData {
   city: string;
   neighborhood: string;
   street: string;
+  cityIbge: string;
 }
 
 export async function fetchCnpj(cnpj: string): Promise<CnpjData | null> {
@@ -62,6 +63,7 @@ export async function fetchCep(cep: string): Promise<CepData | null> {
       city: data.city || '',
       neighborhood: data.neighborhood || '',
       street: data.street || '',
+      cityIbge: data.city_ibge ? String(data.city_ibge) : '',
     };
   } catch {
     return null;

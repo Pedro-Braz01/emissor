@@ -147,6 +147,15 @@ export class XmlSigner {
 
   /**
    * Assina um XML
+   *
+   * O processo segue o padrão XMLDSig (enveloped signature):
+   * 1. Extrai o elemento referenciado pelo atributo Id
+   * 2. Remove qualquer <Signature> existente do elemento (transform enveloped)
+   * 3. Canonicaliza apenas o elemento referenciado
+   * 4. Calcula digest SHA1 do elemento canonicalizado
+   * 5. Monta SignedInfo com o digest
+   * 6. Canonicaliza e assina SignedInfo com chave privada
+   * 7. Insere bloco <Signature> no XML original
    */
   sign(xml: string, idAttr: string = 'Id'): SignedXml {
     // Encontra o ID do elemento a ser assinado
@@ -154,25 +163,36 @@ export class XmlSigner {
     const referenceId = idMatch ? idMatch[1] : '';
     const referenceUri = referenceId ? `#${referenceId}` : '';
 
-    // 1. Canonicaliza o XML (simplificado - remove espaços extras)
-    const canonicalXml = this.canonicalize(xml);
+    // 1. Extrai APENAS o elemento referenciado para calcular o digest
+    //    (não o XML inteiro — isso causava assinatura inválida)
+    let elementToDigest = xml;
+    if (referenceId) {
+      const extracted = this.extractReferencedElement(xml, idAttr, referenceId);
+      if (extracted) {
+        elementToDigest = extracted;
+      }
+    }
 
-    // 2. Calcula digest (SHA1) do conteúdo
-    const digestValue = this.calculateDigest(canonicalXml);
+    // 2. Aplica transform enveloped-signature: remove <Signature> do elemento
+    elementToDigest = elementToDigest.replace(/<Signature\s+xmlns="http:\/\/www\.w3\.org\/2000\/09\/xmldsig#"[\s\S]*?<\/Signature>/g, '');
 
-    // 3. Monta SignedInfo
+    // 3. Canonicaliza o elemento referenciado (C14N)
+    const canonicalElement = this.canonicalize(elementToDigest);
+
+    // 4. Calcula digest (SHA1) do elemento canonicalizado
+    const digestValue = this.calculateDigest(canonicalElement);
+
+    // 5. Monta SignedInfo
     const signedInfo = this.buildSignedInfo(referenceUri, digestValue);
 
-    // 4. Canonicaliza SignedInfo
+    // 6. Canonicaliza SignedInfo e assina com chave privada
     const canonicalSignedInfo = this.canonicalize(signedInfo);
-
-    // 5. Assina SignedInfo com a chave privada
     const signatureValue = this.calculateSignature(canonicalSignedInfo);
 
-    // 6. Monta bloco Signature completo
+    // 7. Monta bloco Signature completo
     const signature = this.buildSignatureBlock(signedInfo, signatureValue);
 
-    // 7. Insere assinatura no XML
+    // 8. Insere assinatura no XML
     const signedXml = this.insertSignature(xml, signature);
 
     return {
@@ -182,13 +202,87 @@ export class XmlSigner {
   }
 
   /**
-   * Canonicaliza XML (C14N simplificado)
+   * Extrai o elemento XML referenciado pelo Id
+   * Retorna o elemento completo incluindo a tag de abertura e fechamento
+   */
+  private extractReferencedElement(xml: string, idAttr: string, idValue: string): string | null {
+    // Encontra a tag que contém o atributo Id
+    const openTagRegex = new RegExp(`<(\\w+)([^>]*${idAttr}="${idValue}"[^>]*)>`);
+    const openTagMatch = xml.match(openTagRegex);
+    if (!openTagMatch) return null;
+
+    const tagName = openTagMatch[1];
+    const startIndex = xml.indexOf(openTagMatch[0]);
+    if (startIndex === -1) return null;
+
+    // Encontra o fechamento correspondente da tag
+    // Usa contagem de profundidade para lidar com tags aninhadas de mesmo nome
+    let depth = 0;
+    let searchPos = startIndex;
+    const openPattern = new RegExp(`<${tagName}[\\s>/]`, 'g');
+    const closePattern = new RegExp(`</${tagName}>`, 'g');
+
+    // Conta a partir do início da tag encontrada
+    const remaining = xml.substring(startIndex);
+    openPattern.lastIndex = 0;
+    closePattern.lastIndex = 0;
+
+    let lastCloseEnd = -1;
+    const opens: number[] = [];
+    const closes: number[] = [];
+
+    // Coleta todas as posições de abertura e fechamento
+    let m;
+    while ((m = openPattern.exec(remaining)) !== null) {
+      opens.push(m.index);
+    }
+    while ((m = closePattern.exec(remaining)) !== null) {
+      closes.push(m.index + m[0].length);
+    }
+
+    // Percorre para encontrar o fechamento correto
+    depth = 0;
+    let openIdx = 0;
+    let closeIdx = 0;
+    const closeTag = `</${tagName}>`;
+
+    for (let i = 0; i < remaining.length; i++) {
+      if (openIdx < opens.length && i === opens[openIdx]) {
+        depth++;
+        openIdx++;
+      }
+      if (closeIdx < closes.length && i === closes[closeIdx] - closeTag.length) {
+        depth--;
+        if (depth === 0) {
+          return remaining.substring(0, closes[closeIdx]);
+        }
+        closeIdx++;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Canonicaliza XML (Canonical XML 1.0 — C14N)
+   *
+   * Implementação simplificada adequada para NFS-e ABRASF:
+   * - Normaliza quebras de linha para LF
+   * - Remove espaços entre tags (whitespace insignificante)
+   * - Normaliza atributos (aspas duplas)
+   * - Remove declaração XML (<?xml?>)
+   * - Preserva namespaces
    */
   private canonicalize(xml: string): string {
     return xml
+      // Normaliza quebras de linha para LF (C14N requirement)
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
+      // Remove declaração XML (C14N exclui <?xml?>)
+      .replace(/<\?xml[^?]*\?>\s*/gi, '')
+      // Remove espaços insignificantes entre tags
       .replace(/>\s+</g, '><')
+      // Remove espaços iniciais/finais
       .trim();
   }
 
@@ -279,22 +373,39 @@ export class XmlSigner {
 // ===================
 
 /**
+ * Deriva chave AES-256 a partir da ENCRYPTION_KEY e um salt.
+ *
+ * IMPORTANTE: versões anteriores usavam 'salt' literal (hardcoded).
+ * Para manter compatibilidade com dados já criptografados, as funções
+ * de decrypt tentam primeiro com o salt embutido nos dados, e depois
+ * com o salt legado 'salt' se necessário.
+ */
+const LEGACY_SALT = 'salt';
+
+function deriveKey(encryptionKey: string, salt: Buffer | string): Buffer {
+  const saltBuf = typeof salt === 'string' ? Buffer.from(salt, 'utf8') : salt;
+  return crypto.scryptSync(encryptionKey, saltBuf, 32);
+}
+
+/**
  * Criptografa dados do certificado para armazenamento seguro
  */
 export function encryptCertificateData(
   data: Buffer,
   encryptionKey: string
 ): { encrypted: string; iv: string } {
+  const salt = crypto.randomBytes(16);
   const iv = crypto.randomBytes(16);
-  const key = crypto.scryptSync(encryptionKey, 'salt', 32);
+  const key = deriveKey(encryptionKey, salt);
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  
+
   const encrypted = Buffer.concat([
+    salt,               // 16 bytes salt
     cipher.update(data),
     cipher.final(),
-    cipher.getAuthTag(),
+    cipher.getAuthTag(), // 16 bytes auth tag
   ]);
-  
+
   return {
     encrypted: encrypted.toString('base64'),
     iv: iv.toString('base64'),
@@ -303,6 +414,7 @@ export function encryptCertificateData(
 
 /**
  * Descriptografa dados do certificado
+ * Compatível com formato novo (salt embutido) e legado (salt hardcoded)
  */
 export function decryptCertificateData(
   encryptedBase64: string,
@@ -311,61 +423,89 @@ export function decryptCertificateData(
 ): Buffer {
   const encrypted = Buffer.from(encryptedBase64, 'base64');
   const iv = Buffer.from(ivBase64, 'base64');
-  const key = crypto.scryptSync(encryptionKey, 'salt', 32);
-  
+
+  // Tenta formato novo (primeiros 16 bytes = salt)
+  if (encrypted.length > 32) {
+    try {
+      const salt = encrypted.subarray(0, 16);
+      const authTag = encrypted.subarray(-16);
+      const ciphertext = encrypted.subarray(16, -16);
+      const key = deriveKey(encryptionKey, salt);
+      const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+      decipher.setAuthTag(authTag);
+      return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    } catch {
+      // Se falhar, tenta formato legado
+    }
+  }
+
+  // Formato legado (salt = 'salt' hardcoded)
   const authTag = encrypted.subarray(-16);
   const ciphertext = encrypted.subarray(0, -16);
-  
+  const key = deriveKey(encryptionKey, LEGACY_SALT);
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(authTag);
-  
-  return Buffer.concat([
-    decipher.update(ciphertext),
-    decipher.final(),
-  ]);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
 
 /**
  * Criptografa senha do certificado
+ * Formato: [salt 16B][iv 16B][ciphertext][authTag 16B] → base64
  */
 export function encryptPassword(
   password: string,
   encryptionKey: string
 ): string {
+  const salt = crypto.randomBytes(16);
   const iv = crypto.randomBytes(16);
-  const key = crypto.scryptSync(encryptionKey, 'salt', 32);
+  const key = deriveKey(encryptionKey, salt);
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  
+
   const encrypted = Buffer.concat([
-    iv,
+    salt,                            // 16 bytes salt (novo)
+    iv,                              // 16 bytes IV
     cipher.update(password, 'utf8'),
     cipher.final(),
-    cipher.getAuthTag(),
+    cipher.getAuthTag(),             // 16 bytes auth tag
   ]);
-  
+
   return encrypted.toString('base64');
 }
 
 /**
  * Descriptografa senha do certificado
+ * Compatível com formato novo (salt+iv embutidos) e legado (iv embutido, salt hardcoded)
  */
 export function decryptPassword(
   encryptedBase64: string,
   encryptionKey: string
 ): string {
   const encrypted = Buffer.from(encryptedBase64, 'base64');
+
+  // Tenta formato novo: [salt 16B][iv 16B][ciphertext][authTag 16B]
+  if (encrypted.length > 48) {
+    try {
+      const salt = encrypted.subarray(0, 16);
+      const iv = encrypted.subarray(16, 32);
+      const authTag = encrypted.subarray(-16);
+      const ciphertext = encrypted.subarray(32, -16);
+      const key = deriveKey(encryptionKey, salt);
+      const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+      decipher.setAuthTag(authTag);
+      return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+    } catch {
+      // Se falhar, tenta formato legado
+    }
+  }
+
+  // Formato legado: [iv 16B][ciphertext][authTag 16B] com salt='salt'
   const iv = encrypted.subarray(0, 16);
   const authTag = encrypted.subarray(-16);
   const ciphertext = encrypted.subarray(16, -16);
-  
-  const key = crypto.scryptSync(encryptionKey, 'salt', 32);
+  const key = deriveKey(encryptionKey, LEGACY_SALT);
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(authTag);
-  
-  return Buffer.concat([
-    decipher.update(ciphertext),
-    decipher.final(),
-  ]).toString('utf8');
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
 }
 
 export default XmlSigner;

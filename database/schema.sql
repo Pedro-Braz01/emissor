@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS public.empresas (
   email_contador        VARCHAR(200),
   telefone              VARCHAR(20),
   endereco_completo     TEXT,
+  cep                   VARCHAR(10),
+  cidade                VARCHAR(100) DEFAULT 'Ribeirão Preto',
+  uf                    VARCHAR(2) DEFAULT 'SP',
   status_licenca        VARCHAR(20) NOT NULL DEFAULT 'pendente'
                           CHECK (status_licenca IN ('pendente','ativa','suspensa','cancelada')),
   -- Certificado digital (armazenado criptografado)
@@ -34,6 +37,14 @@ CREATE TABLE IF NOT EXISTS public.empresas (
   envio_auto_contador   BOOLEAN NOT NULL DEFAULT false,
   envio_auto_emissor    BOOLEAN NOT NULL DEFAULT false,
   envio_auto_tomador    BOOLEAN NOT NULL DEFAULT false,
+  -- NFS-e / RPS
+  ultimo_rps_prefeitura INTEGER DEFAULT 0,
+  serie_rps             VARCHAR(5) DEFAULT '1',
+  item_lista_servico    VARCHAR(10),
+  codigo_cnae           VARCHAR(10),
+  optante_simples       BOOLEAN DEFAULT true,
+  regime_especial       INTEGER,
+  incentivo_fiscal      BOOLEAN DEFAULT false,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -93,6 +104,7 @@ CREATE TABLE IF NOT EXISTS public.configuracoes_tributarias (
 CREATE TABLE IF NOT EXISTS public.notas_fiscais (
   id                          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   empresa_id                  UUID NOT NULL REFERENCES public.empresas(id) ON DELETE CASCADE,
+  tomador_id                  UUID REFERENCES public.tomadores(id) ON DELETE SET NULL,
   -- RPS
   numero_rps                  INTEGER NOT NULL,
   serie_rps                   VARCHAR(5) NOT NULL DEFAULT '1',
@@ -162,7 +174,83 @@ CREATE TABLE IF NOT EXISTS public.notas_fiscais (
 );
 
 -- ============================================================
--- 6. TABELA: audit_logs
+-- 6a. TABELA: certificados (certificados digitais A1)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.certificados (
+  id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  empresa_id              UUID NOT NULL REFERENCES public.empresas(id) ON DELETE CASCADE,
+  pfx_data                TEXT NOT NULL,               -- PFX em base64
+  pfx_password_encrypted  TEXT NOT NULL,               -- senha criptografada (AES-256-GCM)
+  subject                 VARCHAR(500),                -- CN do certificado
+  serial_number           VARCHAR(100),
+  validade                TIMESTAMPTZ NOT NULL,        -- data de expiração
+  ativo                   BOOLEAN NOT NULL DEFAULT true,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Apenas um certificado ativo por empresa
+CREATE UNIQUE INDEX IF NOT EXISTS idx_certificados_empresa_ativo
+  ON public.certificados(empresa_id) WHERE ativo = true;
+
+-- ============================================================
+-- 6b. TABELA: tomadores (cadastro de tomadores de serviço)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.tomadores (
+  id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  empresa_id            UUID NOT NULL REFERENCES public.empresas(id) ON DELETE CASCADE,
+  cpf_cnpj              VARCHAR(18) NOT NULL,
+  razao_social          VARCHAR(200) NOT NULL,
+  inscricao_municipal   VARCHAR(20),
+  email                 VARCHAR(200),
+  telefone              VARCHAR(20),
+  logradouro            VARCHAR(200),
+  numero                VARCHAR(20),
+  complemento           VARCHAR(100),
+  bairro                VARCHAR(100),
+  cep                   VARCHAR(10),
+  codigo_municipio      VARCHAR(10),
+  uf                    VARCHAR(2),
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (empresa_id, cpf_cnpj)
+);
+
+-- ============================================================
+-- 6c. TABELA: eventos_nota (histórico de eventos por nota)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.eventos_nota (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  nota_id           UUID NOT NULL REFERENCES public.notas_fiscais(id) ON DELETE CASCADE,
+  tipo              VARCHAR(30) NOT NULL,     -- EMISSAO, CANCELAMENTO, ERRO, REENVIO
+  sucesso           BOOLEAN NOT NULL DEFAULT false,
+  codigo_retorno    VARCHAR(20),
+  mensagem          TEXT,
+  xml_envio         TEXT,
+  xml_retorno       TEXT,
+  ip_origem         VARCHAR(45),
+  created_by        UUID REFERENCES auth.users(id),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- 6d. TABELA: solicitacoes_vinculo (pedidos de acesso a empresa)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.solicitacoes_vinculo (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id           UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  empresa_id        UUID NOT NULL REFERENCES public.empresas(id) ON DELETE CASCADE,
+  email_solicitante VARCHAR(200) NOT NULL,
+  status            VARCHAR(20) NOT NULL DEFAULT 'pendente'
+                      CHECK (status IN ('pendente','aprovado','rejeitado')),
+  mensagem          TEXT,
+  respondido_por    UUID REFERENCES auth.users(id),
+  respondido_em     TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- 7. TABELA: audit_logs
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.audit_logs (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -186,6 +274,13 @@ CREATE INDEX IF NOT EXISTS idx_notas_competencia     ON public.notas_fiscais(com
 CREATE INDEX IF NOT EXISTS idx_audit_empresa_id      ON public.audit_logs(empresa_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created_at      ON public.audit_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_licencas_empresa_id   ON public.licencas(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_certificados_empresa   ON public.certificados(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_tomadores_empresa      ON public.tomadores(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_tomadores_cpf_cnpj     ON public.tomadores(empresa_id, cpf_cnpj);
+CREATE INDEX IF NOT EXISTS idx_eventos_nota_id        ON public.eventos_nota(nota_id);
+CREATE INDEX IF NOT EXISTS idx_eventos_created_at     ON public.eventos_nota(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_solic_empresa          ON public.solicitacoes_vinculo(empresa_id, status);
+CREATE INDEX IF NOT EXISTS idx_solic_user             ON public.solicitacoes_vinculo(user_id);
 
 -- ============================================================
 -- 8. ROW LEVEL SECURITY (RLS)
@@ -195,6 +290,10 @@ ALTER TABLE public.perfis_usuarios          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.licencas                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.configuracoes_tributarias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notas_fiscais            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.certificados             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tomadores                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.eventos_nota             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.solicitacoes_vinculo     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs               ENABLE ROW LEVEL SECURITY;
 
 -- Helper: retorna true se o user logado é super_admin em qualquer empresa
@@ -344,6 +443,79 @@ CREATE POLICY notas_update_own ON public.notas_fiscais
     empresa_id IN (SELECT public.my_empresa_ids())
   );
 
+-- ── CERTIFICADOS ────────────────────────────────────────
+DROP POLICY IF EXISTS cert_select_own ON public.certificados;
+CREATE POLICY cert_select_own ON public.certificados
+  FOR SELECT USING (
+    empresa_id IN (SELECT public.my_empresa_ids())
+    OR public.is_super_admin()
+  );
+
+DROP POLICY IF EXISTS cert_insert_own ON public.certificados;
+CREATE POLICY cert_insert_own ON public.certificados
+  FOR INSERT WITH CHECK (
+    empresa_id IN (SELECT public.my_empresa_ids())
+  );
+
+DROP POLICY IF EXISTS cert_update_own ON public.certificados;
+CREATE POLICY cert_update_own ON public.certificados
+  FOR UPDATE USING (
+    empresa_id IN (SELECT public.my_empresa_ids())
+  );
+
+-- ── TOMADORES ───────────────────────────────────────────
+DROP POLICY IF EXISTS tomador_select_own ON public.tomadores;
+CREATE POLICY tomador_select_own ON public.tomadores
+  FOR SELECT USING (
+    empresa_id IN (SELECT public.my_empresa_ids())
+  );
+
+DROP POLICY IF EXISTS tomador_insert_own ON public.tomadores;
+CREATE POLICY tomador_insert_own ON public.tomadores
+  FOR INSERT WITH CHECK (
+    empresa_id IN (SELECT public.my_empresa_ids())
+  );
+
+DROP POLICY IF EXISTS tomador_update_own ON public.tomadores;
+CREATE POLICY tomador_update_own ON public.tomadores
+  FOR UPDATE USING (
+    empresa_id IN (SELECT public.my_empresa_ids())
+  );
+
+-- ── EVENTOS NOTA ────────────────────────────────────────
+DROP POLICY IF EXISTS evento_select_own ON public.eventos_nota;
+CREATE POLICY evento_select_own ON public.eventos_nota
+  FOR SELECT USING (
+    nota_id IN (
+      SELECT id FROM public.notas_fiscais
+      WHERE empresa_id IN (SELECT public.my_empresa_ids())
+    )
+  );
+
+DROP POLICY IF EXISTS evento_insert_own ON public.eventos_nota;
+CREATE POLICY evento_insert_own ON public.eventos_nota
+  FOR INSERT WITH CHECK (true); -- Inserção controlada via service_role
+
+-- ── SOLICITAÇÕES VÍNCULO ────────────────────────────────
+DROP POLICY IF EXISTS solic_select_own ON public.solicitacoes_vinculo;
+CREATE POLICY solic_select_own ON public.solicitacoes_vinculo
+  FOR SELECT USING (
+    user_id = auth.uid()
+    OR empresa_id IN (SELECT id FROM public.empresas WHERE user_id = auth.uid())
+    OR public.is_super_admin()
+  );
+
+DROP POLICY IF EXISTS solic_insert_own ON public.solicitacoes_vinculo;
+CREATE POLICY solic_insert_own ON public.solicitacoes_vinculo
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS solic_update_owner ON public.solicitacoes_vinculo;
+CREATE POLICY solic_update_owner ON public.solicitacoes_vinculo
+  FOR UPDATE USING (
+    empresa_id IN (SELECT id FROM public.empresas WHERE user_id = auth.uid())
+    OR public.is_super_admin()
+  );
+
 -- ── AUDIT LOGS ───────────────────────────────────────────
 DROP POLICY IF EXISTS audit_select_own ON public.audit_logs;
 DROP POLICY IF EXISTS audit_insert_own ON public.audit_logs;
@@ -391,3 +563,69 @@ DROP TRIGGER IF EXISTS trg_config_updated_at ON public.configuracoes_tributarias
 CREATE TRIGGER trg_config_updated_at
   BEFORE UPDATE ON public.configuracoes_tributarias
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_certificados_updated_at ON public.certificados;
+CREATE TRIGGER trg_certificados_updated_at
+  BEFORE UPDATE ON public.certificados
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_tomadores_updated_at ON public.tomadores;
+CREATE TRIGGER trg_tomadores_updated_at
+  BEFORE UPDATE ON public.tomadores
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+-- ============================================================
+-- 10. FUNÇÕES RPC
+-- ============================================================
+
+-- Retorna o próximo número de RPS disponível para a empresa/série
+-- Usa ADVISORY LOCK para prevenir race conditions
+CREATE OR REPLACE FUNCTION public.get_next_rps_number(
+  p_empresa_id UUID,
+  p_serie VARCHAR DEFAULT '1'
+)
+RETURNS INTEGER AS $$
+DECLARE
+  v_max_rps INTEGER;
+  v_ultimo_prefeitura INTEGER;
+BEGIN
+  -- Advisory lock baseado no empresa_id para serializar acessos
+  PERFORM pg_advisory_xact_lock(hashtext(p_empresa_id::text || p_serie));
+
+  -- Maior RPS já usado localmente
+  SELECT COALESCE(MAX(numero_rps), 0)
+  INTO v_max_rps
+  FROM public.notas_fiscais
+  WHERE empresa_id = p_empresa_id
+    AND serie_rps = p_serie;
+
+  -- Último RPS registrado pela prefeitura (se disponível)
+  SELECT COALESCE(ultimo_rps_prefeitura, 0)
+  INTO v_ultimo_prefeitura
+  FROM public.empresas
+  WHERE id = p_empresa_id;
+
+  -- Retorna o maior + 1
+  RETURN GREATEST(v_max_rps, v_ultimo_prefeitura) + 1;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Incrementa atomicamente o contador de notas do mês
+CREATE OR REPLACE FUNCTION public.incrementar_notas_mes(
+  p_empresa_id UUID
+)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.licencas
+  SET notas_mes_atual = notas_mes_atual + 1
+  WHERE empresa_id = p_empresa_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Reset mensal dos contadores de notas (executar via cron no 1º dia do mês)
+CREATE OR REPLACE FUNCTION public.reset_notas_mes()
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.licencas SET notas_mes_atual = 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

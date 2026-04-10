@@ -12,7 +12,7 @@ function getAdminClient() {
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
-const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
+const MASTER_EMAIL = process.env.MASTER_EMAIL || '';
 
 async function isAdmin(supabase: ReturnType<typeof createServerSupabaseClient>): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();

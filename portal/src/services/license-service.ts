@@ -144,23 +144,12 @@ export class LicenseService {
   }
 
   /**
-   * Incrementa contador de notas do mês
+   * Incrementa contador de notas do mês (atômico via RPC)
+   * Usa UPDATE SET notas_mes_atual = notas_mes_atual + 1 no servidor
+   * para prevenir race conditions em requisições concorrentes.
    */
   async incrementarNotasMes(empresaId: string): Promise<void> {
-    // Incrementa diretamente na tabela licencas
-    const { data: licenca } = await this.supabase
-      .from('licencas')
-      .select('notas_mes_atual')
-      .eq('empresa_id', empresaId)
-      .single();
-
-    if (licenca) {
-      await this.supabase
-        .from('licencas')
-        .update({ notas_mes_atual: (licenca.notas_mes_atual || 0) + 1 })
-        .eq('empresa_id', empresaId);
-    }
-
+    await this.supabase.rpc('incrementar_notas_mes', { p_empresa_id: empresaId });
     this.cache.delete(empresaId); // Invalida cache
   }
 

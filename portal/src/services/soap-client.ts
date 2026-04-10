@@ -180,29 +180,46 @@ export class SoapClient {
     // Remove CDATA wrapper se existir
     resultXml = resultXml.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
 
-    // Procura por mensagens de erro
-    const mensagemRegex = /<MensagemRetorno>[\s\S]*?<Codigo>(.*?)<\/Codigo>[\s\S]*?<Mensagem>(.*?)<\/Mensagem>[\s\S]*?(?:<Correcao>(.*?)<\/Correcao>)?[\s\S]*?<\/MensagemRetorno>/gi;
-    
+    // Procura por mensagens de erro/alerta
+    // O ISSNet pode retornar MensagemRetorno ou MensagemRetornoLote
+    const mensagemRegex = /<MensagemRetorno>[\s\S]*?<Codigo>(.*?)<\/Codigo>[\s\S]*?<Mensagem>(.*?)<\/Mensagem>[\s\S]*?(?:<Correcao>([\s\S]*?)<\/Correcao>)?[\s\S]*?<\/MensagemRetorno>/gi;
+
     let match;
     while ((match = mensagemRegex.exec(resultXml)) !== null) {
-      const codigo = match[1];
-      const mensagem = match[2];
-      const correcao = match[3];
+      const codigo = match[1]?.trim();
+      const mensagem = match[2]?.trim();
+      const correcao = match[3]?.trim();
 
       // Códigos que começam com E são erros, A são alertas
-      if (codigo.startsWith('E')) {
-        errors.push({ codigo, mensagem, correcao });
-      } else if (codigo.startsWith('A')) {
+      // Códigos numéricos ou outros formatos são tratados como erros
+      if (codigo.startsWith('A')) {
         warnings.push({ codigo, mensagem });
+      } else {
+        // E-prefixados, numéricos, e qualquer outro formato = erro
+        errors.push({ codigo, mensagem, correcao });
       }
     }
 
-    // Verifica se tem NFSe gerada
+    // Verifica se tem NFSe gerada (CompNfse pode conter múltiplas notas)
     const nfseMatch = resultXml.match(/<CompNfse>([\s\S]*?)<\/CompNfse>/i);
     const nfseData = nfseMatch ? this.extractNfseData(nfseMatch[1]) : null;
 
-    // Sucesso se não tem erros E tem NFSe ou se é consulta sem erros
-    const success = errors.length === 0 && (nfseData !== null || !resultXml.includes('<ListaMensagemRetornoLote>'));
+    // Verifica também por erros em ListaMensagemRetorno (sem "Lote")
+    if (errors.length === 0 && !nfseData) {
+      const listaMsgMatch = resultXml.match(/<ListaMensagemRetorno>([\s\S]*?)<\/ListaMensagemRetorno>/i);
+      if (listaMsgMatch) {
+        // Re-parse com o contexto da lista
+        const listaRegex = /<Codigo>(.*?)<\/Codigo>[\s\S]*?<Mensagem>(.*?)<\/Mensagem>/gi;
+        let m;
+        while ((m = listaRegex.exec(listaMsgMatch[1])) !== null) {
+          errors.push({ codigo: m[1]?.trim(), mensagem: m[2]?.trim() });
+        }
+      }
+    }
+
+    // Sucesso se não tem erros E (tem NFSe OU é consulta/operação sem retorno esperado)
+    const hasErrorList = resultXml.includes('<ListaMensagemRetornoLote>') || resultXml.includes('<ListaMensagemRetorno>');
+    const success = errors.length === 0 && (nfseData !== null || !hasErrorList);
 
     return {
       success,

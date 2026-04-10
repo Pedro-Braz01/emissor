@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient, getServiceRoleKey } from '@/lib/supabase-server';
 
-const MASTER_EMAIL = 'pedro.souza53321+dev@gmail.com';
+const MASTER_EMAIL = process.env.MASTER_EMAIL || '';
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
 function getAdminClient() {
