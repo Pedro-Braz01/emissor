@@ -245,7 +245,7 @@ export class NfseService {
           valor_liquido: valorLiquido,
           valor_base_calculo: valorServicos,
           iss_retido: input.servico.issRetido || false,
-          item_lista_servico: input.servico.itemListaServico || empresa.item_lista_servico,
+          item_lc116: input.servico.itemListaServico || empresa.item_lista_servico,
           codigo_cnae: input.servico.codigoCnae || empresa.codigo_cnae,
           codigo_nbs: input.servico.codigoNbs || null,
           discriminacao: input.servico.discriminacao,

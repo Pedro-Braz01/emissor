@@ -81,9 +81,10 @@ export async function POST(request: Request) {
   }
 
   // Obtém próximo RPS local (funciona independente da prefeitura)
-  const { data: rpsLocal } = await adminClient.rpc('get_next_rps_number', {
+  const { data: rpsLocalData } = await adminClient.rpc('get_next_rps_number', {
     p_empresa_id: empresaId,
   });
+  const rpsLocal = rpsLocalData || 1;
 
   // Busca último RPS usado localmente
   const { data: maxRps } = await adminClient

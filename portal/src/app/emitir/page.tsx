@@ -187,15 +187,25 @@ export default function EmitirPage() {
   }, [empresa?.id]);
 
   // ── Recalcula retenções quando valor muda ──
+  const isSimplesNacional = empresa?.regimeTributario === 'simples_nacional';
   const recalcRetencoes = useCallback((valor: string) => {
     const v = parseFloat(valor) || 0;
     if (!config || v <= 0) return;
+    // Simples Nacional: retenções federais são unificadas no DAS, não destacar na NFS-e
+    if (isSimplesNacional) {
+      setRetPis('0');
+      setRetCofins('0');
+      setRetInss('0');
+      setRetIrrf('0');
+      setRetCsll('0');
+      return;
+    }
     setRetPis(((v * config.aliquota_pis) / 100).toFixed(2));
     setRetCofins(((v * config.aliquota_cofins) / 100).toFixed(2));
     setRetInss(((v * config.aliquota_inss) / 100).toFixed(2));
     setRetIrrf(((v * config.aliquota_irrf) / 100).toFixed(2));
     setRetCsll(((v * config.aliquota_csll) / 100).toFixed(2));
-  }, [config]);
+  }, [config, isSimplesNacional]);
 
   const handleValorChange = (v: string) => {
     setValorServicos(v);
